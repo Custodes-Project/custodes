@@ -23,6 +23,8 @@
 add_library(Custodes_SDC
         # list of cpp files follows
         main.cpp
+        store.cpp
+        session.cpp
 )
 
 # Header files go in include directory and are automatically discovered
@@ -58,10 +60,10 @@ target_compile_options(
 )
 
 if(CSDC_BUILD_TESTING)
-    # Configure testing
-    add_executable(CSDC_test EXCLUDE_FROM_ALL)
-    target_link_libraries(CSDC_test GTest::gtest_main)
-    add_subdirectory(tests)
-    include(GoogleTest)
-    gtest_discover_tests(CSDC_test)
+  # Configure testing
+  add_executable(CSDC_test EXCLUDE_FROM_ALL)
+  target_link_libraries(CSDC_test GTest::gtest_main)
+  add_subdirectory(tests)
+  include(GoogleTest)
+  gtest_discover_tests(CSDC_test)
 endif ()
