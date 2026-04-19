@@ -28,7 +28,10 @@ add_library(Custodes_SDC
 )
 
 # Add target dependencies
-target_link_libraries(Custodes_SDC PRIVATE sodium)
+target_link_libraries(Custodes_SDC
+        PRIVATE sodium
+        PRIVATE keychain
+)
 
 # Header files go in include directory and are automatically discovered
 target_include_directories(Custodes_SDC PUBLIC include)

@@ -14,6 +14,10 @@
 target_sources(CSDC_test PRIVATE
         hello_test.cc
         libsodium_test.cc
+        keychain_test.cc
 )
 
-target_link_libraries(CSDC_test PRIVATE sodium)
+target_link_libraries(CSDC_test
+        PRIVATE sodium
+        PRIVATE keychain
+)
