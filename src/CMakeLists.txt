@@ -8,7 +8,7 @@
 #
 # Author: Elijah Zimmerman
 # Created: March 26, 2026
-# Modified: March 27, 2026
+# Modified: April 19, 2026
 
 
 # Source files in src go here
@@ -26,6 +26,9 @@ add_library(Custodes_SDC
         store.cpp
         session.cpp
 )
+
+# Add target dependencies
+target_link_libraries(Custodes_SDC PRIVATE sodium)
 
 # Header files go in include directory and are automatically discovered
 target_include_directories(Custodes_SDC PUBLIC include)
@@ -62,7 +65,7 @@ target_compile_options(
 if(CSDC_BUILD_TESTING)
   # Configure testing
   add_executable(CSDC_test EXCLUDE_FROM_ALL)
-  target_link_libraries(CSDC_test GTest::gtest_main)
+  target_link_libraries(CSDC_test PRIVATE GTest::gtest_main)
   add_subdirectory(tests)
   include(GoogleTest)
   gtest_discover_tests(CSDC_test)

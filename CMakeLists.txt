@@ -78,6 +78,16 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif ()
 
+# LibSodium doesn't support CMake so we use a wrapper.
+message(STATUS "Building libsodium.")
+# Update the commit to point to whatever libsodium-cmake-commit you want to target.
+FetchContent_Declare(Sodium
+        GIT_REPOSITORY https://github.com/robinlinden/libsodium-cmake.git
+        GIT_TAG cfebfd3da486d5a86c644c8b47067e5411c7599c # HEAD, last updated at 2026-02-28
+)
+set(SODIUM_DISABLE_TESTS ON)
+FetchContent_MakeAvailable(Sodium)
+
 # Add subdirectories
 add_subdirectory(src)
 add_subdirectory(tools)
