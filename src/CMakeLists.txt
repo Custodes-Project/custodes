@@ -29,9 +29,22 @@ add_library(Custodes_SDC
 
 # Add target dependencies
 target_link_libraries(Custodes_SDC
-        PRIVATE sodium
-        PRIVATE keychain
+       PRIVATE sodium
 )
+
+# EmScripten config
+if (EMSCRIPTEN)
+  message(STATUS "Configuring for EmScripten.")
+  target_compile_definitions(Custodes_SDC PRIVATE IS_WASM)
+  target_link_options(Custodes_SDC PRIVATE "-sALLOW_MEMORY_GROWTH=1")
+  set_target_properties(Custodes_SDC PROPERTIES SUFFIX ".js")
+else ()
+  message(STATUS "Configuring for desktop.")
+  target_link_libraries(Custodes_SDC PRIVATE keychain)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    target_compile_options(Custodes_SDC PRIVATE -march=native)
+  endif()
+endif ()
 
 # Header files go in include directory and are automatically discovered
 target_include_directories(Custodes_SDC PUBLIC include)
@@ -54,6 +67,9 @@ target_compile_definitions(
         # RelWithDebInfo
         $<$<CONFIG:RelWithDebInfo>:RELEASE_MODE=1>
         $<$<CONFIG:RelWithDebInfo>:ENABLE_PROFILING>
+
+        # EmScripten
+        $<$<CONFIG:EmScripten>:RELEASE_MODE=1>
 )
 
 # Compile options by build configuration
@@ -63,6 +79,7 @@ target_compile_options(
         $<$<CONFIG:Release>:-O3 -march=native -DNDEBUG>
         $<$<CONFIG:MinSizeRel>:-Os -DNDEBUG>
         $<$<CONFIG:RelWithDebInfo>:-O2 -g>
+        $<$<CONFIG:EmScripten>:-Oz>
 )
 
 if(CSDC_BUILD_TESTING)

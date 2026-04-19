@@ -58,7 +58,7 @@ if (DOXYGEN_FOUND)
     )
 endif ()
 
-if (CSDC_BUILD_TESTING)
+if (CSDC_BUILD_TESTING AND NOT EMSCRIPTEN)
     # Setup GoogleTest
     FetchContent_Declare(
             googletest
@@ -72,10 +72,14 @@ if (CSDC_BUILD_TESTING)
 endif ()
 
 # Default build configuration as Debug
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES AND NOT EMSCRIPTEN)
     message(STATUS "Setting build type to 'Debug' as none was specified.")
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+elseif (EMSCRIPTEN)
+    message(STATUS "Setting build type to 'EmScripten'.")
+    set(CMAKE_BUILD_TYPE EmScripten CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "EmScripten")
 endif ()
 
 # LibSodium doesn't support CMake so we use a wrapper.
@@ -87,6 +91,7 @@ FetchContent_Declare(Sodium
 set(SODIUM_DISABLE_TESTS ON)
 FetchContent_MakeAvailable(Sodium)
 
+if (NOT EMSCRIPTEN)
 # Configure Keychain dependency
 message(STATUS "Building Keychain.")
 FetchContent_Declare(keychain
@@ -94,6 +99,7 @@ FetchContent_Declare(keychain
         URL_HASH SHA256=9a9fc5aaa94d03180f1c3735f93d1ebcf9d2925fc915306b8476abc17a3906a9
 )
 FetchContent_MakeAvailable(keychain)
+endif ()
 
 # Add subdirectories
 add_subdirectory(src)

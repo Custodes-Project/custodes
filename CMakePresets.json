@@ -1,0 +1,30 @@
+{
+  "version": 6,
+  "configurePresets": [
+    {
+      "name": "wasm-release",
+      "displayName": "WASM Release Build",
+      "vendor": {
+        "license": "Copyright (c) 2026 Custodes SDC.  Licensed under the LGPL-2.1.",
+        "url": "https://github.com/Custodes-Project/custodes"
+      },
+      "generator": "Ninja",
+      "binaryDir": "${sourceDir}/build-wasm",
+      "cacheVariables": {
+        "CMAKE_BUILD_TYPE": "Release",
+        "CMAKE_TOOLCHAIN_FILE": "$env{EMSDK}/upstream/emscripten/cmake/Modules/Platform/Emscripten.cmake"
+      },
+      "condition": {
+        "type": "notEquals",
+        "lhs": "$env{EMSDK}",
+        "rhs": ""
+      }
+    }
+  ],
+  "buildPresets": [
+    {
+      "name": "wasm-release",
+      "configurePreset": "wasm-release"
+    }
+  ]
+}
