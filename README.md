@@ -64,13 +64,11 @@ To include the GTest suite set the `CSDC_BUILD_TESTING` flag (default is OFF):
 cmake -S . -B ./build -G "Ninja Multi-Config" -DCSDC_BUILD_TESTING=ON
 ```
 
-## .cpol Files
+## .toml Configuration and Policy Files
 
-Custodes Policy files (CPol) are written in Custodes Obvious Minimal Language (COML).  At its core, COML is a TOML file with a reserved block under the heading `[roles]` which does not adhere to the standard TOML syntax rules.
+Custodes Policy files (CPol) are written in Tom's Obvious Minimal Language (TOML).
 
-### TOML Configuration
-
-#### Password Rules (`[passwords]`)
+### Password Rules (`[passwords]`)
 
 | Key              | Default | Description                                                  |
 | ---------------- | ------- | ------------------------------------------------------------ |
@@ -85,15 +83,17 @@ Custodes Policy files (CPol) are written in Custodes Obvious Minimal Language (C
 | min_entropy      | 0       | Minimum allowed entropy score.                               |
 | max_attempts     | None    | Max allowed password entry attempts.                         |
 
-#### Logging (`[logging]`)
+### Logging (`[logging]`)
 
 | Key   | Default | Description                                      |
 | ----- | ------- | ------------------------------------------------ |
 | level | info    | Set log output level. (debug, info, warn, error) |
 
-### Roles Section (`[roles]`)
+## Roles Section (`[roles]`)
 
-The roles section follows a declarative insertion/deletion format:
+The roles section contains one key: `roles`.
+
+The roles key accepts a string which follows a declarative insertion/deletion format:
 
 **Insertion:** `+ <role|document> <user>...`
 
