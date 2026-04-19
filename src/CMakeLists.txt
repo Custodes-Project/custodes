@@ -8,8 +8,10 @@
 #
 # Author: Elijah Zimmerman
 # Created: March 26, 2026
-# Modified: March 27, 2026
+# Modified: April 19, 2026
 
+
+message(STATUS "Configuring Custodes_SDC target.")
 
 # Source files in src go here
 # This is not recursive
@@ -30,6 +32,7 @@ add_library(Custodes_SDC
 # Header files go in include directory and are automatically discovered
 target_include_directories(Custodes_SDC PUBLIC include)
 
+message(STATUS "Setting build configuration for Custodes_SDC to ${CMAKE_BUILD_TYPE}.")
 # Compile definitions by build configuration
 target_compile_definitions(
         Custodes_SDC PRIVATE
@@ -60,6 +63,7 @@ target_compile_options(
 )
 
 if(CSDC_BUILD_TESTING)
+  message(STATUS "Configuring GTest for Custodes_SDC")
   # Configure testing
   add_executable(CSDC_test EXCLUDE_FROM_ALL)
   target_link_libraries(CSDC_test GTest::gtest_main)
@@ -67,3 +71,5 @@ if(CSDC_BUILD_TESTING)
   include(GoogleTest)
   gtest_discover_tests(CSDC_test)
 endif ()
+
+message(STATUS "Finish Custodes_SDC target configuration.")
