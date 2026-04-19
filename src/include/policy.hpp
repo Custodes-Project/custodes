@@ -20,6 +20,9 @@
 #ifndef CUSTODES_INCLUDE_POLICY_H_
 #define CUSTODES_INCLUDE_POLICY_H_
 
+#include <cstddef>
+#include <string>
+#include <unordered_map>
 #include <variant>
 
 #include "store.hpp"
@@ -31,6 +34,28 @@ class PolicyHandler {
   [[nodiscard]] const bool CanUserAccessStore(std::string_view username,
                                               std::string_view password);
   static std::variant<PolicyHandler, ContainerError> CreateFromFile(File file);
+
+ private:
+  /*
+   * password_rules_ defines the password rules used inIsValidPassword.
+   * All values are formatted as strings, but will be parsed as the following
+   * type: validation_regex: string min_length: int max_length: int
+   * require_capital: bool
+   * require_number: bool
+   * require_symbol: bool
+   * max_repetition: int
+   * max_sequence: int
+   * min_entropy: int
+   * max_attempts: int
+   * When the PolicyHandler is created from file, appropriate values in
+   * password_rules_ should be updated.
+   */
+  std::unordered_map<std::string, std::string> password_rules_ = {
+      {"validation_regex", NULL},  {"min_length", NULL},
+      {"max_length", NULL},        {"require_capital", "false"},
+      {"require_number", "false"}, {"require_symbol", "false"},
+      {"max_repetition", NULL},    {"max_sequence", NULL},
+      {"min_entropy", "0"},        {"max_attempts", NULL}};
 };
 
 }  // namespace custodes
