@@ -8,7 +8,16 @@
 #
 # Author: Elijah Zimmerman
 # Created: March 27, 2026
-# Modified: March 27, 2026
+# Modified: April 19, 2026
 
 # Add tests to CSDC_test target
-target_sources(CSDC_test PRIVATE hello_test.cc)
+target_sources(CSDC_test PRIVATE
+        hello_test.cc
+        libsodium_test.cc
+        keychain_test.cc
+)
+
+target_link_libraries(CSDC_test
+        PRIVATE sodium
+        PRIVATE keychain
+)

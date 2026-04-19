@@ -29,6 +29,12 @@ add_library(Custodes_SDC
         session.cpp
 )
 
+# Add target dependencies
+target_link_libraries(Custodes_SDC
+        PRIVATE sodium
+        PRIVATE keychain
+)
+
 # Header files go in include directory and are automatically discovered
 target_include_directories(Custodes_SDC PUBLIC include)
 
@@ -66,7 +72,7 @@ if(CSDC_BUILD_TESTING)
   message(STATUS "Configuring GTest for Custodes_SDC")
   # Configure testing
   add_executable(CSDC_test EXCLUDE_FROM_ALL)
-  target_link_libraries(CSDC_test GTest::gtest_main)
+  target_link_libraries(CSDC_test PRIVATE GTest::gtest_main)
   add_subdirectory(tests)
   include(GoogleTest)
   gtest_discover_tests(CSDC_test)

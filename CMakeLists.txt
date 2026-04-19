@@ -87,6 +87,23 @@ if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
 endif ()
 
+# LibSodium doesn't support CMake so we use a wrapper.
+message(STATUS "Building libsodium.")
+FetchContent_Declare(Sodium
+        GIT_REPOSITORY https://github.com/robinlinden/libsodium-cmake.git
+        GIT_TAG cfebfd3da486d5a86c644c8b47067e5411c7599c # HEAD, last updated at 2026-02-28
+)
+set(SODIUM_DISABLE_TESTS ON)
+FetchContent_MakeAvailable(Sodium)
+
+# Configure Keychain dependency
+message(STATUS "Building Keychain.")
+FetchContent_Declare(keychain
+        URL https://github.com/hrantzsch/keychain/archive/refs/tags/v1.3.1.tar.gz
+        URL_HASH SHA256=9a9fc5aaa94d03180f1c3735f93d1ebcf9d2925fc915306b8476abc17a3906a9
+)
+FetchContent_MakeAvailable(keychain)
+
 # Add subdirectories
 add_subdirectory(src)
 add_subdirectory(tools)
