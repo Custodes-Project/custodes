@@ -30,7 +30,7 @@ add_library(Custodes_SDC
 # Add target dependencies
 target_link_libraries(Custodes_SDC
         PRIVATE sodium
-        PRIVATE tomlplusplus
+        PRIVATE tomlplusplus::tomlplusplus
 )
 
 # EmScripten config
