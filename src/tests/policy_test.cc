@@ -125,3 +125,24 @@ TEST(PolicyHandlerTest, RequireSymbolFail) {
   std::string test_case = "foo";
   EXPECT_FALSE(ph.IsValidPassword(test_case));
 }
+
+TEST(PolicyHandlerTest, MaxRepititionSucceed) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMaxRepitition, "3");
+  std::string test_case = "foo";
+  EXPECT_TRUE(ph.IsValidPassword(test_case));
+}
+
+TEST(PolicyHandlerTest, MaxRepititionExactSucceed) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMaxRepitition, "3");
+  std::string test_case = "fooo";
+  EXPECT_TRUE(ph.IsValidPassword(test_case));
+}
+
+TEST(PolicyHandlerTest, MaxRepititionExactFail) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMaxRepitition, "3");
+  std::string test_case = "foooo";
+  EXPECT_TRUE(ph.IsValidPassword(test_case));
+}

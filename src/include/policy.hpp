@@ -82,6 +82,7 @@ class PolicyHandler {
   [[nodiscard]] const bool CheckRequireCapital(std::string_view password);
   [[nodiscard]] const bool CheckRequireNumber(std::string_view password);
   [[nodiscard]] const bool CheckRequireSymbol(std::string_view password);
+  [[nodiscard]] const bool CheckMaxRepitition(std::string_view password);
 };
 
 }  // namespace custodes

@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <cassert>
 #include <cctype>
+#include <cstddef>
 #include <regex>
 #include <string>
 
@@ -44,6 +45,9 @@ namespace custodes {
     return false;
   }
   if (!this->CheckRequireSymbol(password)) {
+    return false;
+  }
+  if (!this->CheckMaxRepitition(password)) {
     return false;
   }
   return true;
@@ -132,5 +136,41 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
   }
   return std::any_of(password.begin(), password.end(),
                      [](char c) { return !std::isalnum(c); });
+}
+
+[[nodiscard]] const bool PolicyHandler::CheckMaxRepitition(
+    std::string_view password) {
+  // Ensure max_length is in map
+  assert(this->password_rules_.find(PasswordPolicyKey::kMaxRepitition) !=
+         this->password_rules_.end());
+  std::string max_rep_str =
+      this->password_rules_[PasswordPolicyKey::kMaxRepitition];
+
+  if (max_rep_str.empty()) {
+    return true;
+  }
+
+  // Check if password matches max_length
+  int max_rep = std::stoi(max_rep_str);
+
+  // 0 concurrent characters is only possible if string is empty
+  if (max_rep == 0) {
+    return password.length();
+  }
+
+  int ct = 1;
+  for (size_t i = 1; i < max_rep_str.length(); i++) {
+    if (max_rep_str[i] == max_rep_str[i - 1]) {
+      ct++;
+    } else {
+      ct = 1;
+    }
+
+    if (ct > max_rep) {
+      return false;
+    }
+  }
+
+  return true;
 }
 }  // namespace custodes
