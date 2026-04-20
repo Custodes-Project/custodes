@@ -146,3 +146,24 @@ TEST(PolicyHandlerTest, MaxRepititionExactFail) {
   std::string test_case = "foooo";
   EXPECT_TRUE(ph.IsValidPassword(test_case));
 }
+
+TEST(PolicyHandlerTest, MaxSequenceSucceed) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMaxSequence, "3");
+  std::string test_case = "aba";
+  EXPECT_TRUE(ph.IsValidPassword(test_case));
+}
+
+TEST(PolicyHandlerTest, MaxSequenceExactSucceed) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMaxSequence, "3");
+  std::string test_case = "abc";
+  EXPECT_TRUE(ph.IsValidPassword(test_case));
+}
+
+TEST(PolicyHandlerTest, MaxSequenceExactFail) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMaxSequence, "3");
+  std::string test_case = "abcd";
+  EXPECT_TRUE(ph.IsValidPassword(test_case));
+}

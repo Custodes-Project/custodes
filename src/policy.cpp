@@ -50,6 +50,9 @@ namespace custodes {
   if (!this->CheckMaxRepitition(password)) {
     return false;
   }
+  if (!this->CheckMaxSequence(password)) {
+    return false;
+  }
   return true;
 }
 
@@ -167,6 +170,42 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
     }
 
     if (ct > max_rep) {
+      return false;
+    }
+  }
+
+  return true;
+}
+
+[[nodiscard]] const bool PolicyHandler::CheckMaxSequence(
+    std::string_view password) {
+  // Ensure max_sequence is in map
+  assert(this->password_rules_.find(PasswordPolicyKey::kMaxRepitition) !=
+         this->password_rules_.end());
+  std::string max_seq_str =
+      this->password_rules_[PasswordPolicyKey::kMaxRepitition];
+
+  if (max_seq_str.empty()) {
+    return true;
+  }
+
+  // Check if password matches max_sequence
+  int max_seq = std::stoi(max_seq_str);
+
+  // 0 concurrent characters is only possible if string is empty
+  if (max_seq == 0) {
+    return password.length();
+  }
+
+  int ct = 1;
+  for (size_t i = 1; i < max_seq_str.length(); i++) {
+    if (max_seq_str[i] == max_seq_str[i - 1] + 1) {
+      ct++;
+    } else {
+      ct = 1;
+    }
+
+    if (ct > max_seq) {
       return false;
     }
   }
