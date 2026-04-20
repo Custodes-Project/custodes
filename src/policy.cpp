@@ -29,6 +29,9 @@ namespace custodes {
   if (!this->CheckValidationRegex(password)) {
     return false;
   }
+  if (!this->CheckMinLength(password)) {
+    return false;
+  }
   return true;
 }
 
@@ -49,5 +52,20 @@ void PolicyHandler::SetPasswordRule(std::string key, std::string value) {
 
   std::regex re(validation_regex);
   return std::regex_match(password.begin(), password.end(), re);
+}
+[[nodiscard]] const bool PolicyHandler::CheckMinLength(
+    std::string_view password) {
+  // Ensure min_length is in map
+  assert(this->password_rules_.find("min_length") !=
+         this->password_rules_.end());
+  std::string min_length = this->password_rules_["min_length"];
+
+  if (min_length.empty()) {
+    return true;
+  }
+
+  // Check if password matches min_length
+  int length = std::stoi(min_length);
+  return password.length() >= length;
 }
 }  // namespace custodes

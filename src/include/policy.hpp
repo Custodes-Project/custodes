@@ -58,6 +58,7 @@ class PolicyHandler {
       {"min_entropy", "0"},        {"max_attempts", ""}};
 
   [[nodiscard]] const bool CheckValidationRegex(std::string_view password);
+  [[nodiscard]] const bool CheckMinLength(std::string_view password);
 };
 
 }  // namespace custodes
