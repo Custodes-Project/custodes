@@ -23,63 +23,63 @@
 
 TEST(PolicyHandlerTest, RegexSucceed) {
   custodes::PolicyHandler ph;
-  ph.SetPasswordRule("validation_regex", "foo bar");
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kValidationRegex, "foo bar");
   std::string test_case = "foo bar";
   EXPECT_TRUE(ph.IsValidPassword(test_case));
 }
 
 TEST(PolicyHandlerTest, RegexPartialFail) {
   custodes::PolicyHandler ph;
-  ph.SetPasswordRule("validation_regex", "foo bar");
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kValidationRegex, "foo bar");
   std::string test_case = "foo";
   EXPECT_FALSE(ph.IsValidPassword(test_case));
 }
 
 TEST(PolicyHandlerTest, RegexFail) {
   custodes::PolicyHandler ph;
-  ph.SetPasswordRule("validation_regex", "foo");
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kValidationRegex, "foo");
   std::string test_case = "bar";
   EXPECT_FALSE(ph.IsValidPassword(test_case));
 }
 
 TEST(PolicyHandlerTest, MinLengthSucceed) {
   custodes::PolicyHandler ph;
-  ph.SetPasswordRule("min_length", "5");
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMinLength, "5");
   std::string test_case = "aaaaaaaaa";
   EXPECT_TRUE(ph.IsValidPassword(test_case));
 }
 
 TEST(PolicyHandlerTest, MinLengthExactSucceed) {
   custodes::PolicyHandler ph;
-  ph.SetPasswordRule("min_length", "5");
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMinLength, "5");
   std::string test_case = "aaaaa";
   EXPECT_TRUE(ph.IsValidPassword(test_case));
 }
 
 TEST(PolicyHandlerTest, MinLengthFail) {
   custodes::PolicyHandler ph;
-  ph.SetPasswordRule("min_length", "5");
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMinLength, "5");
   std::string test_case = "aaaa";
   EXPECT_FALSE(ph.IsValidPassword(test_case));
 }
 
 TEST(PolicyHandlerTest, MaxLengthSucceed) {
   custodes::PolicyHandler ph;
-  ph.SetPasswordRule("max_length", "5");
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMaxLength, "5");
   std::string test_case = "aa";
   EXPECT_TRUE(ph.IsValidPassword(test_case));
 }
 
 TEST(PolicyHandlerTest, MaxLengthExactSucceed) {
   custodes::PolicyHandler ph;
-  ph.SetPasswordRule("max_length", "5");
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMaxLength, "5");
   std::string test_case = "aaaaa";
   EXPECT_TRUE(ph.IsValidPassword(test_case));
 }
 
 TEST(PolicyHandlerTest, MaxLengthFail) {
   custodes::PolicyHandler ph;
-  ph.SetPasswordRule("max_length", "5");
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMaxLength, "5");
   std::string test_case = "aaaaaaaa";
   EXPECT_FALSE(ph.IsValidPassword(test_case));
 }

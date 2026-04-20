@@ -27,13 +27,27 @@
 #include "store.hpp"
 
 namespace custodes {
+
+enum class PasswordPolicyKey {
+  kValidationRegex,
+  kMinLength,
+  kMaxLength,
+  kRequireCapital,
+  kRequireNumber,
+  kRequireSymbol,
+  kMaxRepitition,
+  kMaxSequence,
+  kMinEntropy,
+  kMaxAttempts
+};
+
 class PolicyHandler {
  public:
   [[nodiscard]] const bool IsValidPassword(std::string_view password);
   [[nodiscard]] const bool CanUserAccessStore(std::string_view username,
                                               std::string_view password);
   static std::variant<PolicyHandler, ContainerError> CreateFromFile(File file);
-  void SetPasswordRule(std::string key, std::string value);
+  void SetPasswordRule(PasswordPolicyKey key, std::string value);
 
  private:
   /*
@@ -50,12 +64,17 @@ class PolicyHandler {
    * When the PolicyHandler is created from file, appropriate values in
    * password_rules_ should be updated.
    */
-  std::unordered_map<std::string, std::string> password_rules_ = {
-      {"validation_regex", ""},    {"min_length", ""},
-      {"max_length", ""},          {"require_capital", "false"},
-      {"require_number", "false"}, {"require_symbol", "false"},
-      {"max_repetition", ""},      {"max_sequence", ""},
-      {"min_entropy", "0"},        {"max_attempts", ""}};
+  std::unordered_map<PasswordPolicyKey, std::string> password_rules_ = {
+      {PasswordPolicyKey::kValidationRegex, ""},
+      {PasswordPolicyKey::kMinLength, ""},
+      {PasswordPolicyKey::kMaxLength, ""},
+      {PasswordPolicyKey::kRequireCapital, "false"},
+      {PasswordPolicyKey::kRequireNumber, "false"},
+      {PasswordPolicyKey::kRequireSymbol, "false"},
+      {PasswordPolicyKey::kMaxRepitition, ""},
+      {PasswordPolicyKey::kMaxSequence, ""},
+      {PasswordPolicyKey::kMinEntropy, "0"},
+      {PasswordPolicyKey::kMaxAttempts, ""}};
 
   [[nodiscard]] const bool CheckValidationRegex(std::string_view password);
   [[nodiscard]] const bool CheckMinLength(std::string_view password);

@@ -38,16 +38,17 @@ namespace custodes {
   return true;
 }
 
-void PolicyHandler::SetPasswordRule(std::string key, std::string value) {
+void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
   this->password_rules_[key] = value;
 }
 
 [[nodiscard]] const bool PolicyHandler::CheckValidationRegex(
     std::string_view password) {
   // Ensure validation_regex is in map
-  assert(this->password_rules_.find("validation_regex") !=
+  assert(this->password_rules_.find(PasswordPolicyKey::kValidationRegex) !=
          this->password_rules_.end());
-  std::string validation_regex = this->password_rules_["validation_regex"];
+  std::string validation_regex =
+      this->password_rules_[PasswordPolicyKey::kValidationRegex];
 
   if (validation_regex.empty()) {
     return true;
@@ -59,9 +60,9 @@ void PolicyHandler::SetPasswordRule(std::string key, std::string value) {
 [[nodiscard]] const bool PolicyHandler::CheckMinLength(
     std::string_view password) {
   // Ensure min_length is in map
-  assert(this->password_rules_.find("min_length") !=
+  assert(this->password_rules_.find(PasswordPolicyKey::kMinLength) !=
          this->password_rules_.end());
-  std::string min_length = this->password_rules_["min_length"];
+  std::string min_length = this->password_rules_[PasswordPolicyKey::kMinLength];
 
   if (min_length.empty()) {
     return true;
@@ -74,9 +75,9 @@ void PolicyHandler::SetPasswordRule(std::string key, std::string value) {
 [[nodiscard]] const bool PolicyHandler::CheckMaxLength(
     std::string_view password) {
   // Ensure max_length is in map
-  assert(this->password_rules_.find("max_length") !=
+  assert(this->password_rules_.find(PasswordPolicyKey::kMaxLength) !=
          this->password_rules_.end());
-  std::string max_length = this->password_rules_["max_length"];
+  std::string max_length = this->password_rules_[PasswordPolicyKey::kMaxLength];
 
   if (max_length.empty()) {
     return true;
