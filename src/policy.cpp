@@ -47,7 +47,7 @@ namespace custodes {
   if (!this->CheckRequireSymbol(password)) {
     return false;
   }
-  if (!this->CheckMaxRepitition(password)) {
+  if (!this->CheckMaxRepetition(password)) {
     return false;
   }
   if (!this->CheckMaxSequence(password)) {
@@ -144,13 +144,13 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
                      [](char c) { return !std::isalnum(c); });
 }
 
-[[nodiscard]] const bool PolicyHandler::CheckMaxRepitition(
+[[nodiscard]] const bool PolicyHandler::CheckMaxRepetition(
     std::string_view password) {
   // Ensure max_length is in map
-  assert(this->password_rules_.find(PasswordPolicyKey::kMaxRepitition) !=
+  assert(this->password_rules_.find(PasswordPolicyKey::kMaxRepetition) !=
          this->password_rules_.end());
   std::string max_rep_str =
-      this->password_rules_[PasswordPolicyKey::kMaxRepitition];
+      this->password_rules_[PasswordPolicyKey::kMaxRepetition];
 
   if (max_rep_str.empty()) {
     return true;
@@ -183,10 +183,10 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
 [[nodiscard]] const bool PolicyHandler::CheckMaxSequence(
     std::string_view password) {
   // Ensure max_sequence is in map
-  assert(this->password_rules_.find(PasswordPolicyKey::kMaxRepitition) !=
+  assert(this->password_rules_.find(PasswordPolicyKey::kMaxRepetition) !=
          this->password_rules_.end());
   std::string max_seq_str =
-      this->password_rules_[PasswordPolicyKey::kMaxRepitition];
+      this->password_rules_[PasswordPolicyKey::kMaxRepetition];
 
   if (max_seq_str.empty()) {
     return true;

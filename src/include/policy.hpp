@@ -35,7 +35,7 @@ enum class PasswordPolicyKey {
   kRequireCapital,
   kRequireNumber,
   kRequireSymbol,
-  kMaxRepitition,
+  kMaxRepetition,
   kMaxSequence,
   kMinEntropy,
   kMaxAttempts
@@ -71,7 +71,7 @@ class PolicyHandler {
       {PasswordPolicyKey::kRequireCapital, "false"},
       {PasswordPolicyKey::kRequireNumber, "false"},
       {PasswordPolicyKey::kRequireSymbol, "false"},
-      {PasswordPolicyKey::kMaxRepitition, ""},
+      {PasswordPolicyKey::kMaxRepetition, ""},
       {PasswordPolicyKey::kMaxSequence, ""},
       {PasswordPolicyKey::kMinEntropy, "0"},
       {PasswordPolicyKey::kMaxAttempts, ""}};
@@ -82,7 +82,7 @@ class PolicyHandler {
   [[nodiscard]] const bool CheckRequireCapital(std::string_view password);
   [[nodiscard]] const bool CheckRequireNumber(std::string_view password);
   [[nodiscard]] const bool CheckRequireSymbol(std::string_view password);
-  [[nodiscard]] const bool CheckMaxRepitition(std::string_view password);
+  [[nodiscard]] const bool CheckMaxRepetition(std::string_view password);
   [[nodiscard]] const bool CheckMaxSequence(std::string_view password);
   [[nodiscard]] const bool CheckMinEntropy(std::string_view password);
 };
