@@ -22,17 +22,71 @@
 
 #include <optional>
 #include <regex>
+#include <string>
+#include <unordered_map>
 #include <variant>
 
 #include "store.hpp"
 
 namespace custodes {
+
+enum class PasswordPolicyKey {
+  kValidationRegex,
+  kMinLength,
+  kMaxLength,
+  kRequireCapital,
+  kRequireNumber,
+  kRequireSymbol,
+  kMaxRepetition,
+  kMaxSequence,
+  kMinEntropy,
+  kMaxAttempts
+};
+
 class PolicyHandler {
 public:
   [[nodiscard]] const bool IsValidPassword(std::string_view password);
   [[nodiscard]] const bool CanUserAccessStore(std::string_view username,
                                               std::string_view password);
   static std::variant<PolicyHandler, ContainerError> CreateFromFile(File file);
+  void SetPasswordRule(PasswordPolicyKey key, std::string value);
+
+ private:
+  /*
+   * password_rules_ defines the password rules used inIsValidPassword.
+   * All values are formatted as strings, but will be parsed as the following
+   * type: validation_regex: string min_length: int max_length: int
+   * require_capital: bool
+   * require_number: bool
+   * require_symbol: bool
+   * max_repetition: int
+   * max_sequence: int
+   * min_entropy: int
+   * max_attempts: int
+   * When the PolicyHandler is created from file, appropriate values in
+   * password_rules_ should be updated.
+   */
+  std::unordered_map<PasswordPolicyKey, std::string> password_rules_ = {
+      {PasswordPolicyKey::kValidationRegex, ""},
+      {PasswordPolicyKey::kMinLength, ""},
+      {PasswordPolicyKey::kMaxLength, ""},
+      {PasswordPolicyKey::kRequireCapital, "false"},
+      {PasswordPolicyKey::kRequireNumber, "false"},
+      {PasswordPolicyKey::kRequireSymbol, "false"},
+      {PasswordPolicyKey::kMaxRepetition, ""},
+      {PasswordPolicyKey::kMaxSequence, ""},
+      {PasswordPolicyKey::kMinEntropy, "0"},
+      {PasswordPolicyKey::kMaxAttempts, ""}};
+
+  [[nodiscard]] const bool CheckValidationRegex(std::string_view password);
+  [[nodiscard]] const bool CheckMinLength(std::string_view password);
+  [[nodiscard]] const bool CheckMaxLength(std::string_view password);
+  [[nodiscard]] const bool CheckRequireCapital(std::string_view password);
+  [[nodiscard]] const bool CheckRequireNumber(std::string_view password);
+  [[nodiscard]] const bool CheckRequireSymbol(std::string_view password);
+  [[nodiscard]] const bool CheckMaxRepetition(std::string_view password);
+  [[nodiscard]] const bool CheckMaxSequence(std::string_view password);
+  [[nodiscard]] const bool CheckMinEntropy(std::string_view password);
 };
 
 enum LoggingLevel {

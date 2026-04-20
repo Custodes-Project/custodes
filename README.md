@@ -37,6 +37,8 @@ brew install clang git cmake doxygen ninja
 
 ## Building
 
+### Desktop Native
+
 To clone and build with Ninja:
 ```shell
 git clone https://github.com/Custodes-Project/custodes.git --depth=1
