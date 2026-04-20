@@ -18,8 +18,6 @@ project(
         LANGUAGES CXX
 )
 
-message(STATUS "Configuring ${PROJECT_NAME} v${PROJECT_VERSION}")
-
 # Configure C++ standard
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -46,7 +44,6 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/$<CONFIGURATION>")
 find_package(Doxygen REQUIRED)
 
 if (DOXYGEN_FOUND)
-    message(STATUS "Doxygen found: Documentation targets enabled.")
     set(DOXYGEN_PROJECT_NAME ${PROJECT_NAME})
     set(DOXYGEN_PROJECT_NUMBER ${PROJECT_VERSION})
     set(DOXYGEN_PROJECT_BRIEF ${PROJECT_DESCRIPTION})
@@ -59,13 +56,9 @@ if (DOXYGEN_FOUND)
             ${PROJECT_SOURCE_DIR}/src
             COMMENT "Generating documentation"
     )
-else()
-    message(WARNING "Doxygen not found: Unable to generate documentation.")
 endif ()
 
-if (CSDC_BUILD_TESTING)
-    message(CHECK_START "Fetching GoogleTest")
-
+if (CSDC_BUILD_TESTING AND NOT EMSCRIPTEN)
     # Setup GoogleTest
     FetchContent_Declare(
             googletest
@@ -76,15 +69,17 @@ if (CSDC_BUILD_TESTING)
     set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
     FetchContent_MakeAvailable(googletest)
     enable_testing()
-
-    message(CHECK_PASS "Done: Testing enabled.")
 endif ()
 
 # Default build configuration as Debug
-if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES)
+if(NOT CMAKE_BUILD_TYPE AND NOT CMAKE_CONFIGURATION_TYPES AND NOT EMSCRIPTEN)
     message(STATUS "Setting build type to 'Debug' as none was specified.")
     set(CMAKE_BUILD_TYPE Debug CACHE STRING "Choose the type of build." FORCE)
     set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "Debug" "Release" "MinSizeRel" "RelWithDebInfo")
+elseif (EMSCRIPTEN)
+    message(STATUS "Setting build type to 'EmScripten'.")
+    set(CMAKE_BUILD_TYPE EmScripten CACHE STRING "Choose the type of build." FORCE)
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS "EmScripten")
 endif ()
 
 # LibSodium doesn't support CMake so we use a wrapper.
@@ -96,6 +91,7 @@ FetchContent_Declare(Sodium
 set(SODIUM_DISABLE_TESTS ON)
 FetchContent_MakeAvailable(Sodium)
 
+if (NOT EMSCRIPTEN)
 # Configure Keychain dependency
 message(STATUS "Building Keychain.")
 FetchContent_Declare(keychain
@@ -103,6 +99,7 @@ FetchContent_Declare(keychain
         URL_HASH SHA256=9a9fc5aaa94d03180f1c3735f93d1ebcf9d2925fc915306b8476abc17a3906a9
 )
 FetchContent_MakeAvailable(keychain)
+endif ()
 
 # Add subdirectories
 add_subdirectory(src)

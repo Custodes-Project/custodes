@@ -11,8 +11,6 @@
 # Modified: April 19, 2026
 
 
-message(STATUS "Configuring Custodes_SDC target.")
-
 # Source files in src go here
 # This is not recursive
 # Subdirectories for the same target should be added with the add_subdirectory() command
@@ -22,24 +20,39 @@ message(STATUS "Configuring Custodes_SDC target.")
 # The CMakeLists.txt file should also have a target_include_directories() command like the one below
 # However, if the content of the subdirectory is sufficiently large
 # Consider making it its own target to avoid unnecessary recompilation
-add_library(Custodes_SDC
-        # list of cpp files follows
+set(CSDC_SOURCE_FILES
         main.cpp
         store.cpp
         session.cpp
         policy.cpp
 )
 
-# Add target dependencies
-target_link_libraries(Custodes_SDC
-        PRIVATE sodium
-        PRIVATE keychain
-)
+# EmScripten config
+if (EMSCRIPTEN)
+  message(STATUS "Configuring for EmScripten.")
+  add_executable(Custodes_SDC ${CSDC_SOURCE_FILES})
+  target_compile_definitions(Custodes_SDC PRIVATE IS_WASM)
+  target_link_options(Custodes_SDC PRIVATE
+          "-sALLOW_MEMORY_GROWTH=1"
+          "-sMODULARIZE=1"
+          "-sEXPORT_NAME='createCustodesModule'"
+          "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+  )
+  set_target_properties(Custodes_SDC PROPERTIES SUFFIX ".js")
+else ()
+  message(STATUS "Configuring for desktop.")
+  add_library(Custodes_SDC ${CSDC_SOURCE_FILES})
+  target_link_libraries(Custodes_SDC PRIVATE keychain)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    target_compile_options(Custodes_SDC PRIVATE -march=native)
+  endif()
+endif ()
+
+target_link_libraries(Custodes_SDC PRIVATE sodium)
 
 # Header files go in include directory and are automatically discovered
 target_include_directories(Custodes_SDC PUBLIC include)
 
-message(STATUS "Setting build configuration for Custodes_SDC to ${CMAKE_BUILD_TYPE}.")
 # Compile definitions by build configuration
 target_compile_definitions(
         Custodes_SDC PRIVATE
@@ -58,6 +71,9 @@ target_compile_definitions(
         # RelWithDebInfo
         $<$<CONFIG:RelWithDebInfo>:RELEASE_MODE=1>
         $<$<CONFIG:RelWithDebInfo>:ENABLE_PROFILING>
+
+        # EmScripten
+        $<$<CONFIG:EmScripten>:RELEASE_MODE=1>
 )
 
 # Compile options by build configuration
@@ -67,10 +83,10 @@ target_compile_options(
         $<$<CONFIG:Release>:-O3 -march=native -DNDEBUG>
         $<$<CONFIG:MinSizeRel>:-Os -DNDEBUG>
         $<$<CONFIG:RelWithDebInfo>:-O2 -g>
+        $<$<CONFIG:EmScripten>:-Oz>
 )
 
 if(CSDC_BUILD_TESTING)
-  message(STATUS "Configuring GTest for Custodes_SDC")
   # Configure testing
   add_executable(CSDC_test EXCLUDE_FROM_ALL)
   target_link_libraries(CSDC_test PRIVATE GTest::gtest_main)
@@ -78,5 +94,3 @@ if(CSDC_BUILD_TESTING)
   include(GoogleTest)
   gtest_discover_tests(CSDC_test)
 endif ()
-
-message(STATUS "Finish Custodes_SDC target configuration.")
