@@ -53,6 +53,9 @@ namespace custodes {
   if (!this->CheckMaxSequence(password)) {
     return false;
   }
+  if (!this->CheckMinEntropy(password)) {
+    return false;
+  }
   return true;
 }
 
@@ -211,5 +214,28 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
   }
 
   return true;
+}
+
+[[nodiscard]] const bool PolicyHandler::CheckMinEntropy(
+    std::string_view password) {
+  /*
+   * E = (length) & log2(size of character pool)
+   * Given ASCII characters, log2(size of character pool) = log2(128) = 7
+   */
+
+  // Ensure min_entropy is in map
+  assert(this->password_rules_.find(PasswordPolicyKey::kMinEntropy) !=
+         this->password_rules_.end());
+  std::string min_entr_str =
+      this->password_rules_[PasswordPolicyKey::kMinEntropy];
+
+  if (min_entr_str.empty()) {
+    return true;
+  }
+
+  // Check if password matches min_entropy
+  int min_entr = std::stoi(min_entr_str);
+  int entropy = password.length() * 7;
+  return entropy >= min_entr;
 }
 }  // namespace custodes

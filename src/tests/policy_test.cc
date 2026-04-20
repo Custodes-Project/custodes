@@ -167,3 +167,24 @@ TEST(PolicyHandlerTest, MaxSequenceExactFail) {
   std::string test_case = "abcd";
   EXPECT_TRUE(ph.IsValidPassword(test_case));
 }
+
+TEST(PolicyHandlerTest, MinEntropySucceed) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMinEntropy, "20");
+  std::string test_case = "aba";
+  EXPECT_TRUE(ph.IsValidPassword(test_case));
+}
+
+TEST(PolicyHandlerTest, MinEntropyExactSucceed) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMinEntropy, "21");
+  std::string test_case = "abc";
+  EXPECT_TRUE(ph.IsValidPassword(test_case));
+}
+
+TEST(PolicyHandlerTest, MinEntropyFail) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kMinEntropy, "29");
+  std::string test_case = "abcd";
+  EXPECT_FALSE(ph.IsValidPassword(test_case));
+}
