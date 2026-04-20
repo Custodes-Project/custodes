@@ -62,3 +62,24 @@ TEST(PolicyHandlerTest, MinLengthFail) {
   std::string test_case = "aaaa";
   EXPECT_FALSE(ph.IsValidPassword(test_case));
 }
+
+TEST(PolicyHandlerTest, MaxLengthSucceed) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule("max_length", "5");
+  std::string test_case = "aa";
+  EXPECT_TRUE(ph.IsValidPassword(test_case));
+}
+
+TEST(PolicyHandlerTest, MaxLengthExactSucceed) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule("max_length", "5");
+  std::string test_case = "aaaaa";
+  EXPECT_TRUE(ph.IsValidPassword(test_case));
+}
+
+TEST(PolicyHandlerTest, MaxLengthFail) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule("max_length", "5");
+  std::string test_case = "aaaaaaaa";
+  EXPECT_FALSE(ph.IsValidPassword(test_case));
+}

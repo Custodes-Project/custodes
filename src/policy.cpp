@@ -32,6 +32,9 @@ namespace custodes {
   if (!this->CheckMinLength(password)) {
     return false;
   }
+  if (!this->CheckMaxLength(password)) {
+    return false;
+  }
   return true;
 }
 
@@ -67,5 +70,20 @@ void PolicyHandler::SetPasswordRule(std::string key, std::string value) {
   // Check if password matches min_length
   int length = std::stoi(min_length);
   return password.length() >= length;
+}
+[[nodiscard]] const bool PolicyHandler::CheckMaxLength(
+    std::string_view password) {
+  // Ensure max_length is in map
+  assert(this->password_rules_.find("max_length") !=
+         this->password_rules_.end());
+  std::string max_length = this->password_rules_["max_length"];
+
+  if (max_length.empty()) {
+    return true;
+  }
+
+  // Check if password matches max_length
+  int length = std::stoi(max_length);
+  return password.length() <= length;
 }
 }  // namespace custodes
