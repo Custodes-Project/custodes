@@ -20,6 +20,7 @@
 #ifndef CUSTODES_INCLUDE_POLICY_H_
 #define CUSTODES_INCLUDE_POLICY_H_
 
+#include <cstdint>
 #include <optional>
 #include <regex>
 #include <string>
@@ -44,7 +45,7 @@ enum class PasswordPolicyKey {
 };
 
 class PolicyHandler {
-public:
+ public:
   [[nodiscard]] const bool IsValidPassword(std::string_view password);
   [[nodiscard]] const bool CanUserAccessStore(std::string_view username,
                                               std::string_view password);
@@ -97,16 +98,16 @@ enum LoggingLevel {
 };
 
 class Role {
-public:
+ public:
   explicit Role(std::string_view role_or_doc, ...);
 
-private:
+ private:
   std::string role_or_doc_;
   std::vector<std::string> users_;
 };
 
 class PolicyConfig {
-public:
+ public:
   static std::optional<PolicyConfig> ParseFromFile(std::string_view file_path);
   const std::regex get_validation_regex();
   const bool is_min_length_set();
@@ -126,7 +127,7 @@ public:
   const LoggingLevel get_logging_level();
   const std::vector<Role> get_roles();
 
-private:
+ private:
   std::regex validation_regex_;
   std::optional<uint32_t> min_length_;
   std::optional<uint32_t> max_length_;
@@ -143,6 +144,6 @@ private:
   PolicyConfig();
 };
 
-} // namespace custodes
+}  // namespace custodes
 
 #endif
