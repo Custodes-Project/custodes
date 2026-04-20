@@ -83,3 +83,17 @@ TEST(PolicyHandlerTest, MaxLengthFail) {
   std::string test_case = "aaaaaaaa";
   EXPECT_FALSE(ph.IsValidPassword(test_case));
 }
+
+TEST(PolicyHandlerTest, RequireCapitalSucceed) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kRequireCapital, "true");
+  std::string test_case = "Foo";
+  EXPECT_TRUE(ph.IsValidPassword(test_case));
+}
+
+TEST(PolicyHandlerTest, RequireCapitalFail) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kRequireCapital, "true");
+  std::string test_case = "foo";
+  EXPECT_FALSE(ph.IsValidPassword(test_case));
+}

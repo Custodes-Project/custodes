@@ -19,7 +19,9 @@
 
 #include "include/policy.hpp"
 
+#include <algorithm>
 #include <cassert>
+#include <cctype>
 #include <regex>
 #include <string>
 
@@ -33,6 +35,9 @@ namespace custodes {
     return false;
   }
   if (!this->CheckMaxLength(password)) {
+    return false;
+  }
+  if (!this->CheckRequireCapital(password)) {
     return false;
   }
   return true;
@@ -86,5 +91,16 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
   // Check if password matches max_length
   int length = std::stoi(max_length);
   return password.length() <= length;
+}
+[[nodiscard]] const bool PolicyHandler::CheckRequireCapital(
+    std::string_view password) {
+  assert(this->password_rules_.find(PasswordPolicyKey::kRequireCapital) !=
+         this->password_rules_.end());
+
+  if (this->password_rules_[PasswordPolicyKey::kRequireCapital] == "false") {
+    return true;
+  }
+  return std::any_of(password.begin(), password.end(),
+                     [](char c) { return std::isupper(c); });
 }
 }  // namespace custodes

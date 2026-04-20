@@ -79,6 +79,7 @@ class PolicyHandler {
   [[nodiscard]] const bool CheckValidationRegex(std::string_view password);
   [[nodiscard]] const bool CheckMinLength(std::string_view password);
   [[nodiscard]] const bool CheckMaxLength(std::string_view password);
+  [[nodiscard]] const bool CheckRequireCapital(std::string_view password);
 };
 
 }  // namespace custodes
