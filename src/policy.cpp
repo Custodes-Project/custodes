@@ -156,7 +156,7 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
     return true;
   }
 
-  // Check if password matches max_length
+  // Check if password matches max_repitition
   int max_rep = std::stoi(max_rep_str);
 
   // 0 concurrent characters is only possible if string is empty
