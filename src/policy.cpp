@@ -19,4 +19,35 @@
 
 #include "include/policy.hpp"
 
-namespace custodes {}
+#include <cassert>
+#include <regex>
+#include <string>
+
+namespace custodes {
+[[nodiscard]] const bool PolicyHandler::IsValidPassword(
+    std::string_view password) {
+  if (!this->CheckValidationRegex(password)) {
+    return false;
+  }
+  return true;
+}
+
+void PolicyHandler::SetPasswordRule(std::string key, std::string value) {
+  this->password_rules_[key] = value;
+}
+
+[[nodiscard]] const bool PolicyHandler::CheckValidationRegex(
+    std::string_view password) {
+  // Ensure validation_regex is in map
+  assert(this->password_rules_.find("validation_regex") !=
+         this->password_rules_.end());
+  std::string validation_regex = this->password_rules_["validation_regex"];
+
+  if (validation_regex.empty()) {
+    return true;
+  }
+
+  std::regex re(validation_regex);
+  return std::regex_match(password.begin(), password.end(), re);
+}
+}  // namespace custodes

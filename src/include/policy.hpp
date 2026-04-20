@@ -20,7 +20,6 @@
 #ifndef CUSTODES_INCLUDE_POLICY_H_
 #define CUSTODES_INCLUDE_POLICY_H_
 
-#include <cstddef>
 #include <string>
 #include <unordered_map>
 #include <variant>
@@ -34,6 +33,7 @@ class PolicyHandler {
   [[nodiscard]] const bool CanUserAccessStore(std::string_view username,
                                               std::string_view password);
   static std::variant<PolicyHandler, ContainerError> CreateFromFile(File file);
+  void SetPasswordRule(std::string key, std::string value);
 
  private:
   /*
@@ -51,11 +51,13 @@ class PolicyHandler {
    * password_rules_ should be updated.
    */
   std::unordered_map<std::string, std::string> password_rules_ = {
-      {"validation_regex", NULL},  {"min_length", NULL},
-      {"max_length", NULL},        {"require_capital", "false"},
+      {"validation_regex", ""},    {"min_length", ""},
+      {"max_length", ""},          {"require_capital", "false"},
       {"require_number", "false"}, {"require_symbol", "false"},
-      {"max_repetition", NULL},    {"max_sequence", NULL},
-      {"min_entropy", "0"},        {"max_attempts", NULL}};
+      {"max_repetition", ""},      {"max_sequence", ""},
+      {"min_entropy", "0"},        {"max_attempts", ""}};
+
+  [[nodiscard]] const bool CheckValidationRegex(std::string_view password);
 };
 
 }  // namespace custodes
