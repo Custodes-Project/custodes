@@ -20,31 +20,34 @@
 # The CMakeLists.txt file should also have a target_include_directories() command like the one below
 # However, if the content of the subdirectory is sufficiently large
 # Consider making it its own target to avoid unnecessary recompilation
-add_library(Custodes_SDC
-        # list of cpp files follows
+set(CSDC_SOURCE_FILES
         main.cpp
         store.cpp
         session.cpp
 )
 
-# Add target dependencies
-target_link_libraries(Custodes_SDC
-       PRIVATE sodium
-)
-
 # EmScripten config
 if (EMSCRIPTEN)
   message(STATUS "Configuring for EmScripten.")
+  add_executable(Custodes_SDC ${CSDC_SOURCE_FILES})
   target_compile_definitions(Custodes_SDC PRIVATE IS_WASM)
-  target_link_options(Custodes_SDC PRIVATE "-sALLOW_MEMORY_GROWTH=1")
+  target_link_options(Custodes_SDC PRIVATE
+          "-sALLOW_MEMORY_GROWTH=1"
+          "-sMODULARIZE=1"
+          "-sEXPORT_NAME='createCustodesModule'"
+          "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+  )
   set_target_properties(Custodes_SDC PROPERTIES SUFFIX ".js")
 else ()
   message(STATUS "Configuring for desktop.")
+  add_library(Custodes_SDC ${CSDC_SOURCE_FILES})
   target_link_libraries(Custodes_SDC PRIVATE keychain)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     target_compile_options(Custodes_SDC PRIVATE -march=native)
   endif()
 endif ()
+
+target_link_libraries(Custodes_SDC PRIVATE sodium)
 
 # Header files go in include directory and are automatically discovered
 target_include_directories(Custodes_SDC PUBLIC include)
