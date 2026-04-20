@@ -111,3 +111,17 @@ TEST(PolicyHandlerTest, RequireNumberFail) {
   std::string test_case = "foo";
   EXPECT_FALSE(ph.IsValidPassword(test_case));
 }
+
+TEST(PolicyHandlerTest, RequireSymbolSucceed) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kRequireSymbol, "true");
+  std::string test_case = "Foo%";
+  EXPECT_TRUE(ph.IsValidPassword(test_case));
+}
+
+TEST(PolicyHandlerTest, RequireSymbolFail) {
+  custodes::PolicyHandler ph;
+  ph.SetPasswordRule(custodes::PasswordPolicyKey::kRequireSymbol, "true");
+  std::string test_case = "foo";
+  EXPECT_FALSE(ph.IsValidPassword(test_case));
+}

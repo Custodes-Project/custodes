@@ -43,6 +43,9 @@ namespace custodes {
   if (!this->CheckRequireNumber(password)) {
     return false;
   }
+  if (!this->CheckRequireSymbol(password)) {
+    return false;
+  }
   return true;
 }
 
@@ -117,5 +120,17 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
   }
   return std::any_of(password.begin(), password.end(),
                      [](char c) { return std::isdigit(c); });
+}
+
+[[nodiscard]] const bool PolicyHandler::CheckRequireSymbol(
+    std::string_view password) {
+  assert(this->password_rules_.find(PasswordPolicyKey::kRequireSymbol) !=
+         this->password_rules_.end());
+
+  if (this->password_rules_[PasswordPolicyKey::kRequireSymbol] == "false") {
+    return true;
+  }
+  return std::any_of(password.begin(), password.end(),
+                     [](char c) { return !std::isalnum(c); });
 }
 }  // namespace custodes
