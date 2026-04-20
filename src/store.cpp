@@ -18,3 +18,35 @@
 // Modified: April 6, 2026
 
 #include "./include/store.hpp"
+
+#include <cstddef>
+#include <fstream>
+#include <memory>
+#include <string>
+
+namespace custodes {
+std::variant<File, FileError> File::CreateFromFilePath(
+    std::string_view filepath) {
+  std::ifstream stream(std::string(filepath), std::ios::binary);
+  if (!stream) return FileError("failed to open: " + std::string(filepath));
+  return File::CreateFromStream(stream);
+}
+std::variant<File, FileError> File::CreateFromStream(std::istream& stream) {
+  stream.seekg(0, std::ios::end);
+  size_t stream_sizes = stream.tellg();
+  stream.seekg(0);
+
+  File f;
+  f.data_ = std::make_unique<unsigned char[]>(stream_sizes);
+  stream.read(reinterpret_cast<char*>(f.data_.get()), stream_sizes);
+
+  if (stream.bad()) return FileError("I/O error during read");
+  if (static_cast<std::size_t>(stream.gcount()) != stream_sizes)
+    return FileError("got: " + std::to_string(stream.gcount()) +
+                     ",expected: " + std::to_string(stream_sizes) + " bytes");
+
+  return f;
+}
+
+// TODO implement File::CheckSignature
+}  // namespace custodes

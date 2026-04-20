@@ -20,6 +20,7 @@
 #ifndef CUSTODES_INCLUDE_STORE_H_
 #define CUSTODES_INCLUDE_STORE_H_
 
+#include <istream>
 #include <memory>
 #include <string>
 #include <string_view>
@@ -33,10 +34,18 @@ typedef std::unique_ptr<unsigned char> Salt;
 
 class ContainerError {
  public:
+  ContainerError() = default;
+  ContainerError(std::string value) : value_(std::move(value)) {}
+
+  [[nodiscard]] const std::string& get_value() const { return value_; }
+
+ private:
   std::string value_;
 };
 
-class FileError : public ContainerError {};
+class FileError : public ContainerError {
+  using ContainerError::ContainerError;
+};
 
 typedef std::unique_ptr<unsigned char> PublicKey;
 
@@ -59,11 +68,13 @@ typedef std::unique_ptr<unsigned char> SymmetricKey;
 
 class File {
  private:
-  std::unique_ptr<unsigned char> data_;
+  std::unique_ptr<unsigned char[]> data_;
 
  public:
   static std::variant<File, FileError> CreateFromFilePath(
       std::string_view filepath);
+  static std::variant<File, FileError> CreateFromStream(std::istream& stream);
+
   FileSignature CheckSignature(PublicKey PublicKey);
 };
 
