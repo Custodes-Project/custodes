@@ -29,32 +29,22 @@
 namespace custodes {
 enum class FileSignature { kNoSignature, kInvalidSignature, kValidSignature };
 
-template <typename T>
-class ReadOnlyStore {
- private:
-  T value_;
+typedef std::unique_ptr<unsigned char> Salt;
 
+class ContainerError {
  public:
-  [[nodiscard]] inline const T get_value(void) { return value_; }
-
- protected:
-  ReadOnlyStore<T>(T value);
-};
-
-class Salt : public ReadOnlyStore<std::unique_ptr<unsigned char>> {};
-
-class ContainerError : public ReadOnlyStore<std::string> {
- public:
-  ContainerError(std::string value)
-      : custodes::ReadOnlyStore<std::string>(value) {}
+  std::string value_;
 };
 
 class FileError : public ContainerError {};
 
-class PublicKey : public ReadOnlyStore<std::string> {};
+typedef std::unique_ptr<unsigned char> PublicKey;
 
 class SymmetricStore;
-class PrivateKey : ReadOnlyStore<std::string> {
+class PrivateKey {
+ private:
+  std::unique_ptr<unsigned char> key_data_;
+
  public:
   static std::variant<SymmetricStore, ContainerError> CreateFromUserKeyfile(
       SymmetricStore keyfile, std::string_view username,
@@ -65,7 +55,7 @@ class PrivateKey : ReadOnlyStore<std::string> {
   CreateFromGuestCredentials(SymmetricStore keyfile);
 };
 
-class SymmetricKey : public ReadOnlyStore<std::string> {};
+typedef std::unique_ptr<unsigned char> SymmetricKey;
 
 class File {
  private:
@@ -93,12 +83,20 @@ class AsymmetricStore {
   static std::variant<AsymmetricStore, FileError> CreateFromFile(File file);
 };
 
-class SymmetricStoreCollection
-    : public ReadOnlyStore<std::unordered_map<std::string, SymmetricStore>> {};
-class AsymmetricStoreCollection
-    : public ReadOnlyStore<std::unordered_map<std::string, AsymmetricStore>> {};
-class PublicKeyCollection
-    : public ReadOnlyStore<std::unordered_map<std::string, PublicKey>> {};
-}  // namespace custodes
+class SymmetricStoreCollection {
+ public:
+  std::unordered_map<std::string, SymmetricStore> collection_;
+};
 
+class AsymmetricStoreCollection {
+ public:
+  std::unordered_map<std::string, AsymmetricStore> collection_;
+};
+
+class PublicKeyCollection {
+ public:
+  std::unordered_map<std::string, PublicKey> collection_;
+};
+
+}  // namespace custodes
 #endif  // CUSTODES_INCLUDE_STORE_H_
