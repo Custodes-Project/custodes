@@ -27,6 +27,7 @@ add_library(Custodes_SDC
         main.cpp
         store.cpp
         session.cpp
+        policy.cpp
 )
 
 # Add target dependencies
