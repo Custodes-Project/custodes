@@ -101,6 +101,15 @@ FetchContent_Declare(keychain
 FetchContent_MakeAvailable(keychain)
 endif ()
 
+# Configure toml++ dependency
+message(STATUS "Building toml++.")
+FetchContent_Declare(
+        tomlplusplus
+        GIT_REPOSITORY https://github.com/marzer/tomlplusplus.git
+        GIT_TAG v3.4.0
+)
+FetchContent_MakeAvailable(tomlplusplus)
+
 # Add subdirectories
 add_subdirectory(src)
 add_subdirectory(tools)

@@ -66,19 +66,11 @@ To include the GTest suite set the `CSDC_BUILD_TESTING` flag (default is OFF):
 cmake -S . -B ./build -G "Ninja Multi-Config" -DCSDC_BUILD_TESTING=ON
 ```
 
-### WebAssembly (Wasm)
+## .toml Configuration and Policy Files
 
-To build Custodes for WASM, first install the Emscripten SDK (emsdk) by following the instructions [here](https://emscripten.org/docs/getting_started/downloads.html).
-Once you have installed, or activated an existing, emsdk; run the appropriate build script, found in the `scripts` directory.
-The resulting `.js` and `.wasm` files will be in `build-wasm/EmScripten`.
+Custodes Policy files (CPol) are written in Tom's Obvious Minimal Language (TOML).
 
-## .cpol Files
-
-Custodes Policy files (CPol) are written in Custodes Obvious Minimal Language (COML).  At its core, COML is a TOML file with a reserved block under the heading `[roles]` which does not adhere to the standard TOML syntax rules.
-
-### TOML Configuration
-
-#### Password Rules (`[passwords]`)
+### Password Rules (`[passwords]`)
 
 | Key              | Default | Description                                                  |
 | ---------------- | ------- | ------------------------------------------------------------ |
@@ -93,15 +85,17 @@ Custodes Policy files (CPol) are written in Custodes Obvious Minimal Language (C
 | min_entropy      | 0       | Minimum allowed entropy score.                               |
 | max_attempts     | None    | Max allowed password entry attempts.                         |
 
-#### Logging (`[logging]`)
+### Logging (`[logging]`)
 
 | Key   | Default | Description                                      |
 | ----- | ------- | ------------------------------------------------ |
 | level | info    | Set log output level. (debug, info, warn, error) |
 
-### Roles Section (`[roles]`)
+## Roles Section (`[roles]`)
 
-The roles section follows a declarative insertion/deletion format:
+The roles section contains one key: `roles`.
+
+The roles key accepts a string which follows a declarative insertion/deletion format:
 
 **Insertion:** `+ <role|document> <user>...`
 

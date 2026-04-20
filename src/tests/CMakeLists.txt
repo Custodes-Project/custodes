@@ -15,11 +15,13 @@ target_sources(CSDC_test PRIVATE
         hello_test.cc
         libsodium_test.cc
         keychain_test.cc
+        tomlplusplus_test.cc
         policy_test.cc
 )
 
 target_link_libraries(CSDC_test
         PRIVATE sodium
         PRIVATE keychain
+        PRIVATE tomlplusplus::tomlplusplus
         PRIVATE Custodes_SDC
 )

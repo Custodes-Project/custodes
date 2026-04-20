@@ -50,6 +50,20 @@ endif ()
 
 target_link_libraries(Custodes_SDC PRIVATE sodium)
 
+# EmScripten config
+if (EMSCRIPTEN)
+  message(STATUS "Configuring for EmScripten.")
+  target_compile_definitions(Custodes_SDC PRIVATE IS_WASM)
+  target_link_options(Custodes_SDC PRIVATE "-sALLOW_MEMORY_GROWTH=1")
+  set_target_properties(Custodes_SDC PROPERTIES SUFFIX ".js")
+else ()
+  message(STATUS "Configuring for desktop.")
+  target_link_libraries(Custodes_SDC PRIVATE keychain)
+  if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    target_compile_options(Custodes_SDC PRIVATE -march=native)
+  endif()
+endif ()
+
 # Header files go in include directory and are automatically discovered
 target_include_directories(Custodes_SDC PUBLIC include)
 
