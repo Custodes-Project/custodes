@@ -37,6 +37,8 @@ brew install clang git cmake doxygen ninja
 
 ## Building
 
+### Desktop Native
+
 To clone and build with Ninja:
 ```shell
 git clone https://github.com/Custodes-Project/custodes.git --depth=1
@@ -63,6 +65,12 @@ To include the GTest suite set the `CSDC_BUILD_TESTING` flag (default is OFF):
 ```shell
 cmake -S . -B ./build -G "Ninja Multi-Config" -DCSDC_BUILD_TESTING=ON
 ```
+
+### WebAssembly (Wasm)
+
+To build Custodes for WASM, first install the Emscripten SDK (emsdk) by following the instructions [here](https://emscripten.org/docs/getting_started/downloads.html).
+Once you have installed, or activated an existing, emsdk; run the appropriate build script, found in the `scripts` directory.
+The resulting `.js` and `.wasm` files will be in `build-wasm/EmScripten`.
 
 ## .cpol Files
 
