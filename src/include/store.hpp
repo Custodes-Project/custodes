@@ -94,6 +94,7 @@ class File {
   std::variant<FileSignature,
                std::tuple<std::shared_ptr<unsigned char[]>, unsigned long long>>
   CheckSignature(PublicKey PublicKey);
+  [[nodiscard]] inline unsigned char* get_data() { return this->data_.get(); }
 };
 
 typedef std::tuple<File, std::string> FileRolePair;
