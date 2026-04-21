@@ -115,8 +115,18 @@ class SymmetricStore {
 };
 
 class AsymmetricStore {
-  File Decrypt(PrivateKey private_key);
+ public:
+  AsymmetricStore(std::shared_ptr<unsigned char[]> data, size_t data_size)
+      : data_(std::move(data)), data_size_(data_size) {}
+  std::shared_ptr<unsigned char[]> data_;
+  size_t data_size_;
+
+  std::optional<File> Decrypt(PrivateKey sender_private_key,
+                              PublicKey sender_public_key);
   static std::variant<AsymmetricStore, FileError> CreateFromFile(File file);
+  static AsymmetricStore EncryptFromFile(File file,
+                                         PublicKey recipient_public_key,
+                                         PrivateKey sender_private_key);
 };
 
 class SymmetricStoreCollection {
