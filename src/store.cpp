@@ -20,6 +20,7 @@
 #include "./include/store.hpp"
 
 #include <sodium/crypto_box.h>
+#include <sodium/crypto_box_curve25519xsalsa20poly1305.h>
 #include <sodium/crypto_sign.h>
 #include <sodium/randombytes.h>
 
@@ -91,7 +92,27 @@ bool File::CanContainSignature() {
 }
 
 std::optional<File> AsymmetricStore::Decrypt(PrivateKey recipient_private_key,
-                                             PublicKey sender_public_key) {}
+                                             PublicKey sender_public_key) {
+  // Get nonce data
+  unsigned char* nonce = data_.get();
+
+  // Get cipher data
+  unsigned char* cipher = data_.get() + crypto_box_NONCEBYTES;
+  size_t cipher_length = data_size_ - crypto_box_NONCEBYTES;
+
+  // Allocate space for the decrypted text
+  size_t decrypted_length = cipher_length - crypto_box_MACBYTES;
+  std::shared_ptr<unsigned char[]> decrypted(
+      new unsigned char[decrypted_length]);
+
+  if (crypto_box_open_easy(decrypted.get(), cipher, cipher_length, nonce,
+                           sender_public_key.get_key_data(),
+                           recipient_private_key.get_key_data()) != 0) {
+    return std::nullopt;
+  }
+
+  return File(decrypted, decrypted_length);
+}
 
 AsymmetricStore AsymmetricStore::EncryptFromFile(
     File file, PublicKey recipient_public_key, PrivateKey sender_private_key) {
