@@ -86,6 +86,8 @@ class File {
   size_t data_size_;
 
  public:
+  File(std::shared_ptr<unsigned char[]> data, size_t data_size)
+      : data_(std::move(data)), data_size_(data_size) {}
   bool CanContainSignature();
   static std::variant<File, FileError> CreateFromFilePath(
       std::string_view filepath);
