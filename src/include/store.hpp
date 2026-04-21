@@ -20,6 +20,7 @@
 #ifndef CUSTODES_INCLUDE_STORE_H_
 #define CUSTODES_INCLUDE_STORE_H_
 
+#include <cstddef>
 #include <istream>
 #include <memory>
 #include <string>
@@ -69,6 +70,7 @@ typedef std::unique_ptr<unsigned char> SymmetricKey;
 class File {
  private:
   std::unique_ptr<unsigned char[]> data_;
+  size_t data_size_;
 
  public:
   static std::variant<File, FileError> CreateFromFilePath(

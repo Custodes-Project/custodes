@@ -38,6 +38,7 @@ std::variant<File, FileError> File::CreateFromStream(std::istream& stream) {
 
   File f;
   f.data_ = std::make_unique<unsigned char[]>(stream_sizes);
+  f.data_size_ = stream_sizes;
   stream.read(reinterpret_cast<char*>(f.data_.get()), stream_sizes);
 
   if (stream.bad()) return FileError("I/O error during read");
