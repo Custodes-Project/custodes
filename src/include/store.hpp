@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <istream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -76,6 +77,9 @@ class PrivateKey {
       std::string_view username, std::string_view password);
   static std::variant<SymmetricStore, ContainerError>
   CreateFromGuestCredentials(SymmetricStore keyfile);
+  [[nodiscard]] inline unsigned char* get_key_data() {
+    return this->key_data_.get();
+  }
 };
 
 typedef std::shared_ptr<unsigned char> SymmetricKey;
@@ -86,6 +90,10 @@ class File {
   size_t data_size_;
 
  public:
+  File(std::shared_ptr<unsigned char[]> data, size_t data_size)
+      : data_(std::move(data)), data_size_(data_size) {}
+
+  File() : data_(nullptr), data_size_(0) {}
   bool CanContainSignature();
   static std::variant<File, FileError> CreateFromFilePath(
       std::string_view filepath);
@@ -95,6 +103,7 @@ class File {
                std::tuple<std::shared_ptr<unsigned char[]>, unsigned long long>>
   CheckSignature(PublicKey PublicKey);
   [[nodiscard]] inline unsigned char* get_data() { return this->data_.get(); }
+  [[nodiscard]] inline size_t get_data_size() { return this->data_size_; }
 };
 
 typedef std::tuple<File, std::string> FileRolePair;
@@ -109,12 +118,25 @@ class SymmetricStore {
 };
 
 class AsymmetricStore {
-  File Decrypt(PrivateKey private_key);
+ public:
+  AsymmetricStore(std::shared_ptr<unsigned char[]> data, size_t data_size)
+      : data_(std::move(data)), data_size_(data_size) {}
+  std::shared_ptr<unsigned char[]> data_;
+  size_t data_size_;
+
+  std::optional<File> Decrypt(PrivateKey sender_private_key,
+                              PublicKey sender_public_key);
   static std::variant<AsymmetricStore, FileError> CreateFromFile(File file);
+  static AsymmetricStore EncryptFromFile(File file,
+                                         PublicKey recipient_public_key,
+                                         PrivateKey sender_private_key);
 };
 
 class SymmetricStoreCollection {
  public:
+  explicit SymmetricStoreCollection(
+      std::unordered_map<std::string, SymmetricStore> collection)
+      : collection_(std::move(collection)) {}
   std::unordered_map<std::string, SymmetricStore> collection_;
 };
 
