@@ -19,11 +19,14 @@
 
 #include "./include/store.hpp"
 
+#include <sodium/crypto_box.h>
 #include <sodium/crypto_sign.h>
+#include <sodium/randombytes.h>
 
 #include <cstddef>
 #include <fstream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <tuple>
 
@@ -85,6 +88,35 @@ bool File::CanContainSignature() {
      */
 
   return this->data_size_ > crypto_sign_BYTES;
+}
+
+std::optional<File> AsymmetricStore::Decrypt(PrivateKey recipient_private_key,
+                                             PublicKey sender_public_key) {}
+
+AsymmetricStore AsymmetricStore::EncryptFromFile(
+    File file, PublicKey recipient_public_key, PrivateKey sender_private_key) {
+  // Get message data
+  size_t message_length = file.get_data_size();
+  unsigned char* message = file.get_data();
+
+  // Allocate for nonce + ciphertext combined
+  size_t cipher_length = message_length + crypto_box_MACBYTES;
+  size_t store_length = crypto_box_NONCEBYTES + cipher_length;
+  auto store = std::make_unique<unsigned char[]>(store_length);
+
+  // Create a random nonce directly into the store buffer
+  randombytes_buf(store.get(), crypto_box_NONCEBYTES);
+
+  // Encrypt into store buffer after the nonce
+  if (crypto_box_easy(store.get() + crypto_box_NONCEBYTES, message,
+                      message_length,
+                      store.get(),  // nonce is at the start of store
+                      recipient_public_key.get_key_data(),
+                      sender_private_key.get_key_data()) != 0) {
+    throw std::runtime_error("Encryption failed");
+  }
+
+  return AsymmetricStore(std::move(store), store_length);
 }
 
 }  // namespace custodes

@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <istream>
 #include <memory>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <unordered_map>
@@ -91,6 +92,8 @@ class File {
  public:
   File(std::shared_ptr<unsigned char[]> data, size_t data_size)
       : data_(std::move(data)), data_size_(data_size) {}
+
+  File() : data_(nullptr), data_size_(0) {}
   bool CanContainSignature();
   static std::variant<File, FileError> CreateFromFilePath(
       std::string_view filepath);
@@ -131,6 +134,9 @@ class AsymmetricStore {
 
 class SymmetricStoreCollection {
  public:
+  explicit SymmetricStoreCollection(
+      std::unordered_map<std::string, SymmetricStore> collection)
+      : collection_(std::move(collection)) {}
   std::unordered_map<std::string, SymmetricStore> collection_;
 };
 
