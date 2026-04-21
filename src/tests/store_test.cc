@@ -42,3 +42,48 @@ TEST(FileTest, CreateFromStream) {
   unsigned char* file_data = f.get_data();
   EXPECT_TRUE(std::equal(std::begin(buffer), std::end(buffer), file_data));
 }
+
+TEST(FileTest, DoesContainSignature) {
+  using namespace custodes;
+
+  // Create a buffer and copy into the stream
+  const size_t buffer_length = 65;
+  unsigned char buffer[buffer_length];
+  std::istringstream stream(
+      std::string(reinterpret_cast<const char*>(buffer), buffer_length));
+
+  std::variant<File, FileError> return_variant = File::CreateFromStream(stream);
+  File f = std::get<File>(return_variant);
+
+  EXPECT_TRUE(f.CanContainSignature());
+}
+
+TEST(FileTest, DoesNotContainSignature) {
+  using namespace custodes;
+
+  // Create a buffer and copy into the stream
+  const size_t buffer_length = 20;
+  unsigned char buffer[buffer_length];
+  std::istringstream stream(
+      std::string(reinterpret_cast<const char*>(buffer), buffer_length));
+
+  std::variant<File, FileError> return_variant = File::CreateFromStream(stream);
+  File f = std::get<File>(return_variant);
+
+  EXPECT_FALSE(f.CanContainSignature());
+}
+
+TEST(FileTest, DoesNotContainSignatureExact) {
+  using namespace custodes;
+
+  // Create a buffer and copy into the stream
+  const size_t buffer_length = 64;
+  unsigned char buffer[buffer_length];
+  std::istringstream stream(
+      std::string(reinterpret_cast<const char*>(buffer), buffer_length));
+
+  std::variant<File, FileError> return_variant = File::CreateFromStream(stream);
+  File f = std::get<File>(return_variant);
+
+  EXPECT_FALSE(f.CanContainSignature());
+}
