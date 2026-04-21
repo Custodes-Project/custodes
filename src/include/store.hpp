@@ -76,6 +76,9 @@ class PrivateKey {
       std::string_view username, std::string_view password);
   static std::variant<SymmetricStore, ContainerError>
   CreateFromGuestCredentials(SymmetricStore keyfile);
+  [[nodiscard]] inline unsigned char* get_key_data() {
+    return this->key_data_.get();
+  }
 };
 
 typedef std::shared_ptr<unsigned char> SymmetricKey;
