@@ -43,7 +43,7 @@ std::variant<File, FileError> File::CreateFromStream(std::istream& stream) {
   stream.seekg(0);
 
   File f;
-  f.data_ = std::make_unique<unsigned char[]>(stream_sizes);
+  f.data_ = std::shared_ptr<unsigned char[]>(new unsigned char[stream_sizes]);
   f.data_size_ = stream_sizes;
   stream.read(reinterpret_cast<char*>(f.data_.get()), stream_sizes);
 
@@ -71,7 +71,7 @@ File::CheckSignature(PublicKey public_key) {
   // Calculate message length and allocate space
   unsigned long long message_length = this->data_size_ - crypto_sign_BYTES;
   std::shared_ptr<unsigned char[]> message =
-      std::make_unique<unsigned char[]>(message_length);
+      std::shared_ptr<unsigned char[]>(new unsigned char[message_length]);
 
   if (crypto_sign_open(message.get(), &message_length, this->data_.get(),
                        this->data_size_, public_key.get_key_data()) != 0) {
@@ -102,7 +102,8 @@ AsymmetricStore AsymmetricStore::EncryptFromFile(
   // Allocate for nonce + ciphertext combined
   size_t cipher_length = message_length + crypto_box_MACBYTES;
   size_t store_length = crypto_box_NONCEBYTES + cipher_length;
-  auto store = std::make_unique<unsigned char[]>(store_length);
+  std::shared_ptr<unsigned char[]> store =
+      std::shared_ptr<unsigned char[]>(new unsigned char[store_length]);
 
   // Create a random nonce directly into the store buffer
   randombytes_buf(store.get(), crypto_box_NONCEBYTES);
