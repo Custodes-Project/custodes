@@ -21,7 +21,11 @@
 #include "../include/store.hpp"
 
 #include <gtest/gtest.h>
+#include <sodium/crypto_sign.h>
+#include <sodium/crypto_sign_ed25519.h>
 
+#include <cstring>
+#include <memory>
 #include <sstream>
 #include <string>
 #include <variant>
@@ -86,4 +90,80 @@ TEST(FileTest, DoesNotContainSignatureExact) {
   File f = std::get<File>(return_variant);
 
   EXPECT_FALSE(f.CanContainSignature());
+}
+
+TEST(FileTest, CheckSignatureNoSignature) {
+  using namespace custodes;
+
+  // Create a buffer and copy into the stream
+  const size_t buffer_length = 20;
+  unsigned char buffer[buffer_length];
+  std::istringstream stream(
+      std::string(reinterpret_cast<const char*>(buffer), buffer_length));
+
+  std::variant<File, FileError> return_variant = File::CreateFromStream(stream);
+  File f = std::get<File>(return_variant);
+
+  // Create a garbage publickey
+  std::shared_ptr<unsigned char[]> pk_data(
+      new unsigned char[crypto_sign_ed25519_PUBLICKEYBYTES]);
+  PublicKey pubkey(pk_data, crypto_sign_ed25519_PUBLICKEYBYTES);
+
+  FileSignature sig = std::get<FileSignature>(f.CheckSignature(pubkey));
+  EXPECT_EQ(sig, FileSignature::kNoSignature);
+}
+
+TEST(FileTest, CheckSignatureInvalidSignature) {
+  using namespace custodes;
+
+  // Create a buffer and copy into the stream
+  const size_t buffer_length = 100;
+  unsigned char buffer[buffer_length];
+  std::istringstream stream(
+      std::string(reinterpret_cast<const char*>(buffer), buffer_length));
+
+  std::variant<File, FileError> return_variant = File::CreateFromStream(stream);
+  File f = std::get<File>(return_variant);
+
+  // Create a garbage publickey
+  std::shared_ptr<unsigned char[]> pk_data(
+      new unsigned char[crypto_sign_ed25519_PUBLICKEYBYTES]);
+  PublicKey pubkey(pk_data, crypto_sign_ed25519_PUBLICKEYBYTES);
+
+  FileSignature sig = std::get<FileSignature>(f.CheckSignature(pubkey));
+  EXPECT_EQ(sig, FileSignature::kInvalidSignature);
+}
+
+TEST(FileTest, CheckSignatureSignature) {
+  using namespace custodes;
+
+  // Create a keypair
+  unsigned char pk[crypto_sign_ed25519_PUBLICKEYBYTES];
+  unsigned char sk[crypto_sign_ed25519_SECRETKEYBYTES];
+  crypto_sign_ed25519_keypair(pk, sk);
+
+  std::shared_ptr<unsigned char[]> pk_data(
+      new unsigned char[crypto_sign_ed25519_PUBLICKEYBYTES]);
+  std::memcpy(pk_data.get(), pk, crypto_sign_ed25519_PUBLICKEYBYTES);
+  PublicKey pubkey(pk_data, crypto_sign_ed25519_PUBLICKEYBYTES);
+
+  // Create a buffer and sign it
+  const size_t buffer_length = 100;
+  unsigned char buffer[buffer_length];
+
+  unsigned char signed_buffer[crypto_sign_BYTES + buffer_length];
+  unsigned long long signed_buffer_length;
+  crypto_sign(signed_buffer, &signed_buffer_length, buffer, buffer_length, sk);
+
+  std::istringstream stream(std::string(
+      reinterpret_cast<const char*>(signed_buffer), signed_buffer_length));
+
+  std::variant<File, FileError> return_variant = File::CreateFromStream(stream);
+  File f = std::get<File>(return_variant);
+
+  // Assert valid signature returns the message tuple
+  auto result = f.CheckSignature(pubkey);
+  auto& [message, message_len] = std::get<1>(result);
+  EXPECT_EQ(message_len, buffer_length);
+  EXPECT_TRUE(std::equal(buffer, buffer + buffer_length, message.get()));
 }
