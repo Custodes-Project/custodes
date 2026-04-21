@@ -19,10 +19,13 @@
 
 #include "./include/store.hpp"
 
+#include <sodium/crypto_sign.h>
+
 #include <cstddef>
 #include <fstream>
 #include <memory>
 #include <string>
+#include <tuple>
 
 namespace custodes {
 std::variant<File, FileError> File::CreateFromFilePath(
@@ -38,6 +41,7 @@ std::variant<File, FileError> File::CreateFromStream(std::istream& stream) {
 
   File f;
   f.data_ = std::make_unique<unsigned char[]>(stream_sizes);
+  f.data_size_ = stream_sizes;
   stream.read(reinterpret_cast<char*>(f.data_.get()), stream_sizes);
 
   if (stream.bad()) return FileError("I/O error during read");
@@ -48,5 +52,39 @@ std::variant<File, FileError> File::CreateFromStream(std::istream& stream) {
   return f;
 }
 
-// TODO implement File::CheckSignature
+std::variant<FileSignature,
+             std::tuple<std::shared_ptr<unsigned char[]>, unsigned long long>>
+File::CheckSignature(PublicKey public_key) {
+  /*
+   * Determines if this file contains a valid signature, if any.
+   If the file connot contain a signature, returns no signature.
+   If it can contain one and its invalid, return invalid signature.
+   Else returns the signed message and message length.
+     */
+  if (!this->CanContainSignature()) {
+    return FileSignature::kNoSignature;
+  }
+
+  // Calculate message length and allocate space
+  unsigned long long message_length = this->data_size_ - crypto_sign_BYTES;
+  std::shared_ptr<unsigned char[]> message =
+      std::make_unique<unsigned char[]>(message_length);
+
+  if (crypto_sign_open(message.get(), &message_length, this->data_.get(),
+                       this->data_size_, public_key.get_key_data()) != 0) {
+    return FileSignature::kInvalidSignature;
+  }
+
+  return std::make_tuple(std::move(message), message_length);
+}
+
+bool File::CanContainSignature() {
+  /*
+   * Determines if the file can contain signature.
+   If data_size_ > crypto_sign_BYTES return true; else false;
+     */
+
+  return this->data_size_ > crypto_sign_BYTES;
+}
+
 }  // namespace custodes

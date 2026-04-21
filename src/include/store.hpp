@@ -20,6 +20,7 @@
 #ifndef CUSTODES_INCLUDE_STORE_H_
 #define CUSTODES_INCLUDE_STORE_H_
 
+#include <cstddef>
 #include <istream>
 #include <memory>
 #include <string>
@@ -30,7 +31,7 @@
 namespace custodes {
 enum class FileSignature { kNoSignature, kInvalidSignature, kValidSignature };
 
-typedef std::unique_ptr<unsigned char> Salt;
+typedef std::shared_ptr<unsigned char> Salt;
 
 class ContainerError {
  public:
@@ -47,12 +48,25 @@ class FileError : public ContainerError {
   using ContainerError::ContainerError;
 };
 
-typedef std::unique_ptr<unsigned char> PublicKey;
+class PublicKey {
+ private:
+  std::shared_ptr<unsigned char[]> key_data_;
+  size_t data_size_;
+
+ public:
+  PublicKey(std::shared_ptr<unsigned char[]> key_data, size_t data_size)
+      : key_data_(std::move(key_data)), data_size_(data_size) {}
+  [[nodiscard]] inline unsigned char* get_key_data() {
+    return this->key_data_.get();
+  }
+
+  [[nodiscard]] inline size_t get_data_size() { return this->data_size_; }
+};
 
 class SymmetricStore;
 class PrivateKey {
  private:
-  std::unique_ptr<unsigned char> key_data_;
+  std::shared_ptr<unsigned char> key_data_;
 
  public:
   static std::variant<SymmetricStore, ContainerError> CreateFromUserKeyfile(
@@ -64,18 +78,23 @@ class PrivateKey {
   CreateFromGuestCredentials(SymmetricStore keyfile);
 };
 
-typedef std::unique_ptr<unsigned char> SymmetricKey;
+typedef std::shared_ptr<unsigned char> SymmetricKey;
 
 class File {
  private:
-  std::unique_ptr<unsigned char[]> data_;
+  std::shared_ptr<unsigned char[]> data_;
+  size_t data_size_;
 
  public:
+  bool CanContainSignature();
   static std::variant<File, FileError> CreateFromFilePath(
       std::string_view filepath);
   static std::variant<File, FileError> CreateFromStream(std::istream& stream);
 
-  FileSignature CheckSignature(PublicKey PublicKey);
+  std::variant<FileSignature,
+               std::tuple<std::shared_ptr<unsigned char[]>, unsigned long long>>
+  CheckSignature(PublicKey PublicKey);
+  [[nodiscard]] inline unsigned char* get_data() { return this->data_.get(); }
 };
 
 typedef std::tuple<File, std::string> FileRolePair;
