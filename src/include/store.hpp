@@ -48,7 +48,21 @@ class FileError : public ContainerError {
   using ContainerError::ContainerError;
 };
 
-typedef std::unique_ptr<unsigned char> PublicKey;
+class PublicKey {
+ private:
+  std::unique_ptr<unsigned char[]> key_data_;
+  size_t data_size_;
+
+ public:
+  PublicKey(std::unique_ptr<unsigned char[]> key_data, size_t data_size)
+      : key_data_(std::move(key_data)), data_size_(data_size) {}
+  [[nodiscard]] inline unsigned char* get_key_data() {
+    return this->key_data_.get();
+  }
+
+  [[nodiscard]] inline size_t get_data_size() { return this->data_size_; }
+
+};
 
 class SymmetricStore;
 class PrivateKey {
