@@ -61,7 +61,6 @@ class PublicKey {
   }
 
   [[nodiscard]] inline size_t get_data_size() { return this->data_size_; }
-
 };
 
 class SymmetricStore;
@@ -85,6 +84,8 @@ class File {
  private:
   std::unique_ptr<unsigned char[]> data_;
   size_t data_size_;
+
+  bool CanContainSignature();
 
  public:
   static std::variant<File, FileError> CreateFromFilePath(

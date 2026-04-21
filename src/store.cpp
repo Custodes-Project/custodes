@@ -49,5 +49,13 @@ std::variant<File, FileError> File::CreateFromStream(std::istream& stream) {
   return f;
 }
 
-// TODO implement File::CheckSignature
+bool File::CanContainSignature() {
+  /*
+   * Determines if the file can contain signature.
+   If data_size_ > crypto_sign_BYTES return true; else false;
+     */
+
+  return this->data_size_ > crypto_sign_BYTES;
+}
+
 }  // namespace custodes
