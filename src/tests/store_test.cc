@@ -186,7 +186,7 @@ TEST(FileTest, CheckSignatureSignature) {
   EXPECT_TRUE(std::equal(buffer, buffer + buffer_length, message.get()));
 }
 
-TEST_F(SymmetricStoreTest, EcryptDecrypt) {
+TEST_F(SymmetricStoreTest, EncryptDecrypt) {
   std::string plaintext = "encrypt me";
   std::shared_ptr<unsigned char[]> plaintext_ptr(
     new unsigned char[plaintext.size()]);
