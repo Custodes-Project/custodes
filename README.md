@@ -66,6 +66,13 @@ To include the GTest suite set the `CSDC_BUILD_TESTING` flag (default is OFF):
 cmake -S . -B ./build -G "Ninja Multi-Config" -DCSDC_BUILD_TESTING=ON
 ```
 
+To build and execute the test target, ensure the GTest suite is included and build the `CSDC_test` target:
+
+``` shell
+cmake --build ./build --target=CSDC_test
+ctest
+```
+
 ## .toml Configuration and Policy Files
 
 Custodes Policy files (CPol) are written in Tom's Obvious Minimal Language (TOML).
