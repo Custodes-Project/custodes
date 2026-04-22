@@ -111,11 +111,13 @@ CreateFromFile(File file, SymmetricKey sym_key) {
 
   size_t cipher_length = data_length + crypto_secretbox_MACBYTES;
   size_t store_length = crypto_secretbox_NONCEBYTES + cipher_length;
-  std::shared_ptr<unsigned char[]> store = std::shared_ptr<unsigned char[]>(new unsigned char[store_length]);
+  std::shared_ptr<unsigned char[]> store = std::shared_ptr<unsigned char[]>(
+    new unsigned char[store_length]);
 
   randombytes_buf(store.get(), crypto_secretbox_NONCEBYTES);
 
-  if (crypto_secretbox_easy(store.get() + crypto_secretbox_NONCEBYTES, data, data_length, store.get(), sym_key.get()) != 0) {
+  if (crypto_secretbox_easy(store.get() + crypto_secretbox_NONCEBYTES, data,
+                            data_length, store.get(), sym_key.get()) != 0) {
     return FileError("Failed to encrypt data.");
   }
 
@@ -143,7 +145,7 @@ std::optional<File> AsymmetricStore::Decrypt(PrivateKey recipient_private_key,
   // Allocate space for the decrypted text
   size_t decrypted_length = cipher_length - crypto_box_MACBYTES;
   std::shared_ptr<unsigned char[]> decrypted(
-      new unsigned char[decrypted_length]);
+    new unsigned char[decrypted_length]);
 
   if (crypto_box_open_easy(decrypted.get(), cipher, cipher_length, nonce,
                            sender_public_key.get_key_data(),
