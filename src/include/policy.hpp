@@ -63,7 +63,13 @@ class Role {
 class PolicyConfig {
  public:
   static std::optional<PolicyConfig> ParseFromFile(std::string_view file_path);
-  const std::regex get_validation_regex() { return validation_regex_; }
+  [[nodiscard]] inline const std::regex get_validation_regex() {
+    return validation_regex_;
+  }
+  [[nodiscard]] inline const std::string get_regex_string() {
+    return regex_string_;
+  }
+
   [[nodiscard]] inline const bool is_min_length_set() {
     return min_length_.has_value();
   }
@@ -175,6 +181,7 @@ class PolicyHandler {
                                               std::string_view password);
   static std::variant<PolicyHandler, ContainerError> CreateFromFile(File file);
   void SetPasswordRule(PasswordPolicyKey key, std::string value);
+  PolicyConfig policy_config_;
 
  private:
   PolicyConfig policy_config_;
