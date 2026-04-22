@@ -31,6 +31,8 @@
 #include <string>
 #include <tuple>
 
+#include "sodium/crypto_secretbox.h"
+
 namespace custodes {
 std::variant<File, FileError> File::CreateFromFilePath(
     std::string_view filepath) {
@@ -82,6 +84,46 @@ File::CheckSignature(PublicKey public_key) {
   return std::make_tuple(std::move(message), message_length);
 }
 
+std::optional<File> SymmetricStore::Decrypt(SymmetricKey symmetric_key) {
+  // Get nonce pointer
+  unsigned char* nonce = data_.get();
+
+  // Get ciphertext pointer and size
+  unsigned char* ciphertext = data_.get() + crypto_secretbox_NONCEBYTES;
+  size_t cipher_length = data_size_ - crypto_secretbox_NONCEBYTES;
+
+  // Allocate decrypted buffer
+  size_t decrypted_length = cipher_length - crypto_secretbox_MACBYTES;
+  std::shared_ptr<unsigned char[]> decrypted_buffer(new unsigned char[decrypted_length]);
+
+  // Decrypt
+  if (crypto_secretbox_open_easy(decrypted_buffer.get(), ciphertext, cipher_length, nonce, symmetric_key.get()) != 0) {
+    return std::nullopt;
+  }
+  return File(decrypted_buffer, decrypted_length);
+}
+
+std::variant<SymmetricStore, FileError> SymmetricStore::
+CreateFromFile(File file, SymmetricKey sym_key) {
+
+  size_t data_length = file.get_data_size();
+  unsigned char* data = file.get_data();
+
+  size_t cipher_length = data_length + crypto_secretbox_MACBYTES;
+  size_t store_length = crypto_secretbox_NONCEBYTES + cipher_length;
+  std::shared_ptr<unsigned char[]> store = std::shared_ptr<unsigned char[]>(
+    new unsigned char[store_length]);
+
+  randombytes_buf(store.get(), crypto_secretbox_NONCEBYTES);
+
+  if (crypto_secretbox_easy(store.get() + crypto_secretbox_NONCEBYTES, data,
+                            data_length, store.get(), sym_key.get()) != 0) {
+    return FileError("Failed to encrypt data.");
+  }
+
+  return SymmetricStore(store, store_length);
+}
+
 bool File::CanContainSignature() {
   /*
    * Determines if the file can contain signature.
@@ -103,7 +145,7 @@ std::optional<File> AsymmetricStore::Decrypt(PrivateKey recipient_private_key,
   // Allocate space for the decrypted text
   size_t decrypted_length = cipher_length - crypto_box_MACBYTES;
   std::shared_ptr<unsigned char[]> decrypted(
-      new unsigned char[decrypted_length]);
+    new unsigned char[decrypted_length]);
 
   if (crypto_box_open_easy(decrypted.get(), cipher, cipher_length, nonce,
                            sender_public_key.get_key_data(),

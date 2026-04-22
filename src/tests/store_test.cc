@@ -30,6 +30,24 @@
 #include <string>
 #include <variant>
 
+#include "sodium.h"
+
+// GTest is actually sick and can do stuff like this to clean up tests
+class SymmetricStoreTest: public ::testing::Test {
+protected:
+  void SetUp() override {
+    if (sodium_init() < 0) {
+      FAIL() << "libsodium not initialized";
+    }
+  }
+
+  custodes::SymmetricKey GenerateTestKey() {
+    custodes::SymmetricKey key_buf(new unsigned char[crypto_secretbox_KEYBYTES]);
+    crypto_secretbox_keygen(key_buf.get());
+    return key_buf;
+  }
+};
+
 TEST(FileTest, CreateFromStream) {
   using namespace custodes;
 
@@ -166,4 +184,46 @@ TEST(FileTest, CheckSignatureSignature) {
   auto& [message, message_len] = std::get<1>(result);
   EXPECT_EQ(message_len, buffer_length);
   EXPECT_TRUE(std::equal(buffer, buffer + buffer_length, message.get()));
+}
+
+TEST_F(SymmetricStoreTest, EcryptDecrypt) {
+  std::string plaintext = "encrypt me";
+  std::shared_ptr<unsigned char[]> plaintext_ptr(
+    new unsigned char[plaintext.size()]);
+  memcpy(plaintext_ptr.get(), plaintext.data(), plaintext.size());
+  custodes::File plaintext_file(plaintext_ptr, plaintext.size());
+
+  custodes::SymmetricKey key = GenerateTestKey();
+
+  auto result = custodes::SymmetricStore::CreateFromFile(plaintext_file, key);
+  ASSERT_TRUE(std::holds_alternative<custodes::SymmetricStore>(result));
+  custodes::SymmetricStore store = std::get<custodes::SymmetricStore>(result);
+
+  std::optional<custodes::File> decrypted_file = store.Decrypt(key);
+
+  ASSERT_TRUE(decrypted_file.has_value());
+  EXPECT_EQ(decrypted_file->get_data_size(), plaintext_file.get_data_size());
+  EXPECT_EQ(
+    memcmp(decrypted_file->get_data(), plaintext_file.get_data(), plaintext_file
+      .get_data_size()), 0);
+}
+
+TEST_F(SymmetricStoreTest, EncryptionFail) {
+  std::string plaintext = "encrypt me";
+  std::shared_ptr<unsigned char[]> plaintext_ptr(
+    new unsigned char[plaintext.size()]);
+  memcpy(plaintext_ptr.get(), plaintext.data(), plaintext.size());
+  custodes::File plaintext_file(plaintext_ptr, plaintext.size());
+
+  custodes::SymmetricKey key = GenerateTestKey();
+
+  auto result = custodes::SymmetricStore::CreateFromFile(plaintext_file, key);
+  ASSERT_TRUE(std::holds_alternative<custodes::SymmetricStore>(result));
+  custodes::SymmetricStore store = std::get<custodes::SymmetricStore>(result);
+
+  unsigned char* raw = store.get_data_ptr();
+  raw[crypto_secretbox_NONCEBYTES + 1] ^= 0xFF;
+
+  std::optional<custodes::File> decrypted_file = store.Decrypt(key);
+  EXPECT_FALSE(decrypted_file.has_value());
 }
