@@ -59,61 +59,37 @@ namespace custodes {
   return true;
 }
 
-void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
-  this->password_rules_[key] = value;
-}
-
 [[nodiscard]] const bool PolicyHandler::CheckValidationRegex(
     std::string_view password) {
-  // Ensure validation_regex is in map
-  assert(this->password_rules_.find(PasswordPolicyKey::kValidationRegex) !=
-         this->password_rules_.end());
-  std::string validation_regex =
-      this->password_rules_[PasswordPolicyKey::kValidationRegex];
-
-  if (validation_regex.empty()) {
+  if (policy_config_.get_regex_string().empty()) {
     return true;
   }
 
-  std::regex re(validation_regex);
-  return std::regex_match(password.begin(), password.end(), re);
+  return std::regex_match(password.begin(), password.end(),
+                          policy_config_.get_validation_regex());
 }
 [[nodiscard]] const bool PolicyHandler::CheckMinLength(
     std::string_view password) {
   // Ensure min_length is in map
-  assert(this->password_rules_.find(PasswordPolicyKey::kMinLength) !=
-         this->password_rules_.end());
-  std::string min_length = this->password_rules_[PasswordPolicyKey::kMinLength];
-
-  if (min_length.empty()) {
+  if (!policy_config_.is_min_length_set()) {
     return true;
   }
 
   // Check if password matches min_length
-  int length = std::stoi(min_length);
-  return password.length() >= length;
+  return password.length() >= policy_config_.get_min_length();
 }
 [[nodiscard]] const bool PolicyHandler::CheckMaxLength(
     std::string_view password) {
-  // Ensure max_length is in map
-  assert(this->password_rules_.find(PasswordPolicyKey::kMaxLength) !=
-         this->password_rules_.end());
-  std::string max_length = this->password_rules_[PasswordPolicyKey::kMaxLength];
-
-  if (max_length.empty()) {
+  if (!policy_config_.is_max_length_set()) {
     return true;
   }
 
-  // Check if password matches max_length
-  int length = std::stoi(max_length);
-  return password.length() <= length;
+  return password.length() <= policy_config_.get_max_length();
 }
+
 [[nodiscard]] const bool PolicyHandler::CheckRequireCapital(
     std::string_view password) {
-  assert(this->password_rules_.find(PasswordPolicyKey::kRequireCapital) !=
-         this->password_rules_.end());
-
-  if (this->password_rules_[PasswordPolicyKey::kRequireCapital] == "false") {
+  if (!policy_config_.is_capital_required()) {
     return true;
   }
   return std::any_of(password.begin(), password.end(),
@@ -122,10 +98,7 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
 
 [[nodiscard]] const bool PolicyHandler::CheckRequireNumber(
     std::string_view password) {
-  assert(this->password_rules_.find(PasswordPolicyKey::kRequireNumber) !=
-         this->password_rules_.end());
-
-  if (this->password_rules_[PasswordPolicyKey::kRequireNumber] == "false") {
+  if (!policy_config_.is_number_required()) {
     return true;
   }
   return std::any_of(password.begin(), password.end(),
@@ -134,10 +107,7 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
 
 [[nodiscard]] const bool PolicyHandler::CheckRequireSymbol(
     std::string_view password) {
-  assert(this->password_rules_.find(PasswordPolicyKey::kRequireSymbol) !=
-         this->password_rules_.end());
-
-  if (this->password_rules_[PasswordPolicyKey::kRequireSymbol] == "false") {
+  if (!policy_config_.is_symbol_required()) {
     return true;
   }
   return std::any_of(password.begin(), password.end(),
@@ -146,33 +116,23 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
 
 [[nodiscard]] const bool PolicyHandler::CheckMaxRepetition(
     std::string_view password) {
-  // Ensure max_length is in map
-  assert(this->password_rules_.find(PasswordPolicyKey::kMaxRepetition) !=
-         this->password_rules_.end());
-  std::string max_rep_str =
-      this->password_rules_[PasswordPolicyKey::kMaxRepetition];
-
-  if (max_rep_str.empty()) {
+  if (!policy_config_.is_max_repetition_set()) {
     return true;
   }
 
-  // Check if password matches max_repitition
-  int max_rep = std::stoi(max_rep_str);
-
-  // 0 concurrent characters is only possible if string is empty
-  if (max_rep == 0) {
-    return password.length();
+  if (policy_config_.get_max_repetition() == 0 && password.empty()) {
+    return true;
   }
 
   int ct = 1;
-  for (size_t i = 1; i < max_rep_str.length(); i++) {
-    if (max_rep_str[i] == max_rep_str[i - 1]) {
+  for (size_t i = 1; i < password.length(); i++) {
+    if (password[i] == password[i - 1]) {
       ct++;
     } else {
       ct = 1;
     }
 
-    if (ct > max_rep) {
+    if (ct > policy_config_.get_max_repetition()) {
       return false;
     }
   }
@@ -182,33 +142,24 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
 
 [[nodiscard]] const bool PolicyHandler::CheckMaxSequence(
     std::string_view password) {
-  // Ensure max_sequence is in map
-  assert(this->password_rules_.find(PasswordPolicyKey::kMaxRepetition) !=
-         this->password_rules_.end());
-  std::string max_seq_str =
-      this->password_rules_[PasswordPolicyKey::kMaxRepetition];
-
-  if (max_seq_str.empty()) {
+  if (!policy_config_.is_max_sequence_set()) {
     return true;
   }
 
-  // Check if password matches max_sequence
-  int max_seq = std::stoi(max_seq_str);
-
   // 0 concurrent characters is only possible if string is empty
-  if (max_seq == 0) {
-    return password.length();
+  if (policy_config_.get_max_sequence() == 0 && password.empty()) {
+    return true;
   }
 
   int ct = 1;
-  for (size_t i = 1; i < max_seq_str.length(); i++) {
-    if (max_seq_str[i] == max_seq_str[i - 1] + 1) {
+  for (size_t i = 1; i < password.length(); i++) {
+    if (password[i] == password[i - 1] + 1) {
       ct++;
     } else {
       ct = 1;
     }
 
-    if (ct > max_seq) {
+    if (ct > policy_config_.get_max_sequence()) {
       return false;
     }
   }
@@ -222,20 +173,8 @@ void PolicyHandler::SetPasswordRule(PasswordPolicyKey key, std::string value) {
    * E = (length) & log2(size of character pool)
    * Given ASCII characters, log2(size of character pool) = log2(128) = 7
    */
-
-  // Ensure min_entropy is in map
-  assert(this->password_rules_.find(PasswordPolicyKey::kMinEntropy) !=
-         this->password_rules_.end());
-  std::string min_entr_str =
-      this->password_rules_[PasswordPolicyKey::kMinEntropy];
-
-  if (min_entr_str.empty()) {
-    return true;
-  }
-
   // Check if password matches min_entropy
-  int min_entr = std::stoi(min_entr_str);
   int entropy = password.length() * 7;
-  return entropy >= min_entr;
+  return entropy >= policy_config_.get_min_entropy();
 }
 }  // namespace custodes

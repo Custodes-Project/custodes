@@ -24,7 +24,6 @@
 #include <optional>
 #include <regex>
 #include <string>
-#include <unordered_map>
 #include <variant>
 
 #include "store.hpp"
@@ -121,7 +120,7 @@ class PolicyConfig {
   }
 
   [[nodiscard]] inline const uint32_t get_max_sequence() {
-    return get_max_sequence();
+    return max_sequence_.value();
   }
 
   [[nodiscard]] inline const uint32_t get_min_entropy() { return min_entropy_; }
@@ -136,11 +135,9 @@ class PolicyConfig {
 
   [[nodiscard]] inline const std::vector<Role> get_roles() { return roles_; }
 
-  inline void set_validation_regex(std::regex regex) {
-    validation_regex_ = regex;
-  }
   inline void set_regex_string(std::string regex_string) {
     regex_string_ = regex_string;
+    validation_regex_ = std::regex(regex_string);
   }
   inline void set_min_length(uint32_t min_length) { min_length_ = min_length; }
   inline void set_max_length(uint32_t max_length) { max_length_ = max_length; }
@@ -184,12 +181,13 @@ class PolicyConfig {
   std::optional<uint32_t> max_attempts_;
   LoggingLevel logging_level_ = INFO;
   std::vector<Role> roles_;
-
-  PolicyConfig();
 };
 
 class PolicyHandler {
  public:
+  explicit PolicyHandler(PolicyConfig policy_config)
+      : policy_config_(std::move(policy_config)) {}
+  PolicyHandler() = default;
   [[nodiscard]] const bool IsValidPassword(std::string_view password);
   [[nodiscard]] const bool CanUserAccessStore(std::string_view username,
                                               std::string_view password);
