@@ -31,19 +31,6 @@
 
 namespace custodes {
 
-enum class PasswordPolicyKey {
-  kValidationRegex,
-  kMinLength,
-  kMaxLength,
-  kRequireCapital,
-  kRequireNumber,
-  kRequireSymbol,
-  kMaxRepetition,
-  kMaxSequence,
-  kMinEntropy,
-  kMaxAttempts
-};
-
 enum LoggingLevel {
   DEBUG,
   WARN,
@@ -129,6 +116,9 @@ class PolicyConfig {
   inline void set_validation_regex(std::regex regex) {
     validation_regex_ = regex;
   }
+  inline void set_regex_string(std::string regex_string) {
+    regex_string_ = regex_string;
+  }
   inline void set_min_length(uint32_t min_length) { min_length_ = min_length; }
   inline void set_max_length(uint32_t max_length) { max_length_ = max_length; }
   inline void set_require_capital(bool require_capital) {
@@ -159,6 +149,7 @@ class PolicyConfig {
 
  private:
   std::regex validation_regex_;
+  std::string regex_string_;
   std::optional<uint32_t> min_length_;
   std::optional<uint32_t> max_length_;
   bool require_capital_ = false;
@@ -180,11 +171,9 @@ class PolicyHandler {
   [[nodiscard]] const bool CanUserAccessStore(std::string_view username,
                                               std::string_view password);
   static std::variant<PolicyHandler, ContainerError> CreateFromFile(File file);
-  void SetPasswordRule(PasswordPolicyKey key, std::string value);
   PolicyConfig policy_config_;
 
  private:
-  PolicyConfig policy_config_;
   [[nodiscard]] const bool CheckValidationRegex(std::string_view password);
   [[nodiscard]] const bool CheckMinLength(std::string_view password);
   [[nodiscard]] const bool CheckMaxLength(std::string_view password);
