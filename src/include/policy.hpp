@@ -63,23 +63,93 @@ class Role {
 class PolicyConfig {
  public:
   static std::optional<PolicyConfig> ParseFromFile(std::string_view file_path);
-  const std::regex get_validation_regex();
-  const bool is_min_length_set();
-  const bool is_max_length_set();
-  const bool is_max_repetition_set();
-  const bool is_max_sequence_set();
-  const bool is_max_attempts_set();
-  const uint32_t get_min_length();
-  const uint32_t get_max_length();
-  const bool is_capital_required();
-  const bool is_number_required();
-  const bool is_symbol_required();
-  const uint32_t get_max_repetition();
-  const uint32_t get_max_sequence();
-  const uint32_t get_min_entropy();
-  const uint32_t get_max_attempts();
-  const LoggingLevel get_logging_level();
-  const std::vector<Role> get_roles();
+  const std::regex get_validation_regex() { return validation_regex_; }
+  [[nodiscard]] inline const bool is_min_length_set() {
+    return min_length_.has_value();
+  }
+  [[nodiscard]] inline const bool is_max_length_set() {
+    return max_length_.has_value();
+  }
+  [[nodiscard]] inline const bool is_max_repetition_set() {
+    return max_repetition_.has_value();
+  }
+  [[nodiscard]] inline const bool is_max_sequence_set() {
+    return max_sequence_.has_value();
+  }
+  [[nodiscard]] inline const bool is_max_attempts_set() {
+    return max_attempts_.has_value();
+  }
+
+  [[nodiscard]] inline const uint32_t get_min_length() {
+    return min_length_.value();
+  }
+
+  [[nodiscard]] inline const uint32_t get_max_length() {
+    return max_length_.value();
+  }
+
+  [[nodiscard]] inline const bool is_capital_required() {
+    return require_capital_;
+  }
+
+  [[nodiscard]] inline const bool is_number_required() {
+    return require_number_;
+  }
+
+  [[nodiscard]] inline const bool is_symbol_required() {
+    return require_symbol_;
+  }
+
+  [[nodiscard]] inline const uint32_t get_max_repetition() {
+    return max_repetition_.value();
+  }
+
+  [[nodiscard]] inline const uint32_t get_max_sequence() {
+    return get_max_sequence();
+  }
+
+  [[nodiscard]] inline const uint32_t get_min_entropy() { return min_entropy_; }
+
+  [[nodiscard]] inline const uint32_t get_max_attempts() {
+    return max_attempts_.value();
+  }
+
+  [[nodiscard]] inline const LoggingLevel get_logging_level() {
+    return logging_level_;
+  }
+
+  [[nodiscard]] inline const std::vector<Role> get_roles() { return roles_; }
+
+  inline void set_validation_regex(std::regex regex) {
+    validation_regex_ = regex;
+  }
+  inline void set_min_length(uint32_t min_length) { min_length_ = min_length; }
+  inline void set_max_length(uint32_t max_length) { max_length_ = max_length; }
+  inline void set_require_capital(bool require_capital) {
+    require_capital_ = require_capital;
+  }
+  inline void set_require_number(bool require_number) {
+    require_number_ = require_number;
+  }
+  inline void set_require_symbol(bool require_symbol) {
+    require_symbol_ = require_symbol;
+  }
+  inline void set_max_repetition(uint32_t max_repetition) {
+    max_repetition_ = max_repetition;
+  }
+  inline void set_max_sequence(uint32_t max_sequence) {
+    max_sequence_ = max_sequence;
+  }
+  inline void set_min_entropy(uint32_t min_entropy) {
+    min_entropy_ = min_entropy;
+  }
+  inline void set_max_attempts(uint32_t max_attempts) {
+    max_attempts_ = max_attempts;
+  }
+  inline void set_logging_level(LoggingLevel logging_level) {
+    logging_level_ = logging_level;
+  }
+  inline void set_roles(std::vector<Role> roles) { roles_ = roles; }
 
  private:
   std::regex validation_regex_;
