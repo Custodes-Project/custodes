@@ -90,6 +90,7 @@ if(CSDC_BUILD_TESTING)
   # Configure testing
   add_executable(CSDC_test EXCLUDE_FROM_ALL)
   target_link_libraries(CSDC_test PRIVATE GTest::gtest_main)
+  target_compile_definitions(CSDC_test PRIVATE CSDC_UNIT_TESTING)
   add_subdirectory(tests)
   include(GoogleTest)
   gtest_discover_tests(CSDC_test)

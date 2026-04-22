@@ -29,6 +29,8 @@
 #include <unordered_map>
 #include <variant>
 
+#include "../../build/_deps/googletest-src/googletest/include/gtest/gtest_prod.h"
+
 namespace custodes {
 enum class FileSignature { kNoSignature, kInvalidSignature, kValidSignature };
 
@@ -113,6 +115,10 @@ class SymmetricStore {
   SymmetricStore(std::shared_ptr<unsigned char[]> data, size_t data_size): data_(std::move(data)), data_size_(data_size) {}
   std::optional<File> Decrypt(SymmetricKey symmetric_key);
   static std::variant<SymmetricStore, FileError> CreateFromFile(File file, SymmetricKey sym_key);
+
+#ifdef CSDC_UNIT_TESTING
+  unsigned char* get_data_ptr() { return data_.get(); }
+#endif
 
 private:
   std::shared_ptr<unsigned char[]> data_;
