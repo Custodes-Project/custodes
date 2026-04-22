@@ -31,6 +31,8 @@
 #include <string>
 #include <tuple>
 
+#include "sodium/crypto_secretbox.h"
+
 namespace custodes {
 std::variant<File, FileError> File::CreateFromFilePath(
     std::string_view filepath) {
@@ -80,6 +82,29 @@ File::CheckSignature(PublicKey public_key) {
   }
 
   return std::make_tuple(std::move(message), message_length);
+}
+
+std::optional<File> SymmetricStore::Decrypt(SymmetricKey symmetric_key) {
+  // Get nonce pointer
+  unsigned char* nonce = data_.get();
+
+  // Get ciphertext pointer and size
+  unsigned char* ciphertext = data_.get() + crypto_secretbox_NONCEBYTES;
+  size_t cipher_length = data_size_ - crypto_secretbox_NONCEBYTES;
+
+  // Allocate decrypted buffer
+  size_t decrypted_length = cipher_length - crypto_secretbox_MACBYTES;
+  std::shared_ptr<unsigned char[]> decrypted_buffer(new unsigned char[decrypted_length]);
+
+  // Decrypt
+  if (crypto_secretbox_open_easy(decrypted_buffer.get(), ciphertext, cipher_length, nonce, symmetric_key.get()) != 0) {
+    return std::nullopt;
+  }
+  return File(decrypted_buffer, decrypted_length);
+}
+
+std::variant<SymmetricStore, FileError> SymmetricStore::
+CreateFromFile(File file) {
 }
 
 bool File::CanContainSignature() {
