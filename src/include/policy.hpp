@@ -49,6 +49,29 @@ class Role {
 
 class PolicyConfig {
  public:
+  PolicyConfig(std::regex validation_regex, std::string regex_string,
+               std::optional<uint32_t> min_length,
+               std::optional<uint32_t> max_length,
+               std::optional<uint32_t> max_repetition,
+               std::optional<uint32_t> max_sequence,
+               std::optional<uint32_t> max_attempts, std::vector<Role> roles)
+      : validation_regex_(std::move(validation_regex)),
+        regex_string_(std::move(regex_string)),
+        min_length_(min_length),
+        max_length_(max_length),
+        max_repetition_(max_repetition),
+        max_sequence_(max_sequence),
+        max_attempts_(max_attempts),
+        roles_(std::move(roles)) {}
+  PolicyConfig()
+      : validation_regex_(),
+        regex_string_(""),
+        min_length_(std::nullopt),
+        max_length_(std::nullopt),
+        max_repetition_(std::nullopt),
+        max_sequence_(std::nullopt),
+        max_attempts_(std::nullopt),
+        roles_({}) {}
   static std::optional<PolicyConfig> ParseFromFile(std::string_view file_path);
   [[nodiscard]] inline const std::regex get_validation_regex() {
     return validation_regex_;
