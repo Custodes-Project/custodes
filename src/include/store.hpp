@@ -109,15 +109,16 @@ class File {
 typedef std::tuple<File, std::string> FileRolePair;
 
 class SymmetricStore {
- private:
-  std::shared_ptr<unsigned char[]> data_;
-  size_t data_size_;
-  Salt salt_;
-
  public:
   SymmetricStore(std::shared_ptr<unsigned char[]> data, size_t data_size): data_(std::move(data)), data_size_(data_size) {}
   std::optional<File> Decrypt(SymmetricKey symmetric_key);
-  static std::variant<SymmetricStore, FileError> CreateFromFile(File file);
+  static std::variant<SymmetricStore, FileError> CreateFromFile(File file, SymmetricKey sym_key);
+
+private:
+  std::shared_ptr<unsigned char[]> data_;
+  size_t data_size_;
+
+  SymmetricStore(): data_size_(0) {}
 };
 
 class AsymmetricStore {

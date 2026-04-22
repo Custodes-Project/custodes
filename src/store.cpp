@@ -104,7 +104,22 @@ std::optional<File> SymmetricStore::Decrypt(SymmetricKey symmetric_key) {
 }
 
 std::variant<SymmetricStore, FileError> SymmetricStore::
-CreateFromFile(File file) {
+CreateFromFile(File file, SymmetricKey sym_key) {
+
+  size_t data_length = file.get_data_size();
+  unsigned char* data = file.get_data();
+
+  size_t cipher_length = data_length + crypto_secretbox_MACBYTES;
+  size_t store_length = crypto_secretbox_NONCEBYTES + cipher_length;
+  std::shared_ptr<unsigned char[]> store = std::shared_ptr<unsigned char[]>(new unsigned char[store_length]);
+
+  randombytes_buf(store.get(), crypto_secretbox_NONCEBYTES);
+
+  if (crypto_secretbox_easy(store.get() + crypto_secretbox_NONCEBYTES, data, data_length, store.get(), sym_key.get()) != 0) {
+    return FileError("Failed to encrypt data.");
+  }
+
+  return SymmetricStore(store, store_length);
 }
 
 bool File::CanContainSignature() {
