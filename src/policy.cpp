@@ -83,8 +83,30 @@ void apply_rule(std::vector<Role> roles, bool insertion, std::string_view role,
 
   if (!rules) {
     return ContainerError("No rules provided.");
+Role::Role(std::string_view role, std::string_view users_or_docs) {
+  role_ = std::move(role);
+  std::stringstream ss(users_or_docs.data());
+  std::string item;
+  while (std::getline(ss, item, ' ')) {
+    users_and_docs_.push_back(item);
   }
 }
+
+void Role::add_users_or_docs(std::string_view users_or_docs) {
+  std::stringstream ss(users_or_docs.data());
+  std::string item;
+  while (std::getline(ss, item, ' ')) {
+    users_and_docs_.push_back(item);
+  }
+}
+
+void Role::remove_users_or_docs(std::string_view users_or_docs) {
+  std::stringstream ss(users_or_docs.data());
+  std::string item;
+  while (std::getline(ss, item, ' ')) {
+    users_and_docs_.erase(std::find(users_and_docs_.begin(),
+                                    users_and_docs_.end(), item));
+  }
 }
 
 std::optional<PolicyConfig> PolicyConfig::ParseFromFile(
