@@ -188,3 +188,15 @@ TEST(PolicyHandlerTest, MinEntropyFail) {
   std::string test_case = "abcd";
   EXPECT_FALSE(ph.IsValidPassword(test_case));
 }
+
+TEST(PolicyHandlerTest, GenerateFromFile) {
+  auto result = custodes::PolicyHandler::CreateFromFile("test_files/test_config.toml");
+  if (std::holds_alternative<custodes::ContainerError>(result)) {
+    std::cerr << std::get<custodes::ContainerError>(result).get_value() << std::endl;
+    FAIL();
+  }
+  auto ph = std::get<custodes::PolicyHandler>(result);
+  EXPECT_TRUE(ph.policy_config_.is_capital_required());
+  EXPECT_FALSE(ph.policy_config_.is_symbol_required());
+  EXPECT_EQ(ph.policy_config_.get_min_length(), 8);
+}
