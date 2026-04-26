@@ -30,6 +30,35 @@
 #include "toml++/toml.hpp"
 
 namespace custodes {
+
+namespace {
+LoggingLevel parse_logging_level(
+  const std::optional<std::string_view>& option_string) {
+  constexpr LoggingLevel DEFAULT_LEVEL = INFO;
+
+  if (option_string) {
+    std::string s(*option_string);
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
+      return std::tolower(c);
+    });
+    if (s.compare("debug")) {
+      return LoggingLevel::DEBUG;
+    }
+    if (s.compare("info")) {
+      return LoggingLevel::INFO;
+    }
+    if (s.compare("warn")) {
+      return LoggingLevel::WARN;
+    }
+    if (s.compare("error")) {
+      return LoggingLevel::ERROR;
+    }
+    return DEFAULT_LEVEL;
+  }
+  return DEFAULT_LEVEL;
+}
+}
+}
 [[nodiscard]] const bool PolicyHandler::IsValidPassword(
     std::string_view password) {
   if (!this->CheckValidationRegex(password)) {
