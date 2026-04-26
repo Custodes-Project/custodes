@@ -94,7 +94,7 @@ std::variant<std::vector<Role>, ContainerError> parse_rules(
   while (std::getline(ss, line)) {
     std::smatch match;
     if (!std::regex_search(line, match, rule_regex)) {
-      return ContainerError("Invalid rule provided.");
+      return ContainerError("Invalid rule provided: " + line);
     }
     if (match[0].str() == "+") {
       apply_rule(roles, true, match[1].str(), match[2].str());
@@ -137,11 +137,11 @@ void Role::remove_users_or_docs(std::string_view users_or_docs) {
   }
 }
 
-std::optional<PolicyConfig> PolicyConfig::ParseFromFile(
+std::variant<PolicyConfig, ContainerError> PolicyConfig::ParseFromFile(
   std::string_view file_path) {
   toml::parse_result result = toml::parse_file(file_path);
   if (!result) {
-    return std::nullopt;
+    return ContainerError("Unable to parse config file.");
   }
   toml::table tbl = std::move(result).table();
   toml::node_view<toml::node> passwords = tbl["passwords"];
@@ -165,7 +165,7 @@ std::optional<PolicyConfig> PolicyConfig::ParseFromFile(
   std::variant<std::vector<Role>, ContainerError> roles_result = parse_rules(
     tbl["logging"]["level"].value<std::string_view>());
   if (std::holds_alternative<ContainerError>(roles_result)) {
-    return std::nullopt;
+    return std::get<ContainerError>(roles_result);
   }
   std::vector<Role> roles = std::get<std::vector<Role>>(roles_result);
 
@@ -211,10 +211,11 @@ std::optional<PolicyConfig> PolicyConfig::ParseFromFile(
 
 std::variant<PolicyHandler, ContainerError> PolicyHandler::
 CreateFromFile(std::string_view file_path) {
-  if (auto pc = PolicyConfig::ParseFromFile(file_path)) {
-    return PolicyHandler(*pc);
+  auto result = PolicyConfig::ParseFromFile(file_path);
+  if (std::holds_alternative<ContainerError>(result)) {
+    return std::get<ContainerError>(result);
   }
-  return ContainerError("Failed to parse config.");
+  return PolicyHandler(std::get<PolicyConfig>(result));
 }
 
 [[nodiscard]] const bool PolicyHandler::CheckValidationRegex(
