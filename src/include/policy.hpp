@@ -51,15 +51,23 @@ class PolicyConfig {
   PolicyConfig(std::regex validation_regex, std::string regex_string,
                std::optional<uint32_t> min_length,
                std::optional<uint32_t> max_length,
+               bool require_capital,
+               bool require_number,
+               bool require_symbol,
                std::optional<uint32_t> max_repetition,
                std::optional<uint32_t> max_sequence,
+               uint32_t min_entropy,
                std::optional<uint32_t> max_attempts, std::vector<Role> roles)
       : validation_regex_(std::move(validation_regex)),
         regex_string_(std::move(regex_string)),
         min_length_(min_length),
         max_length_(max_length),
+        require_capital_(require_capital),
+        require_number_(require_number),
+        require_symbol_(require_symbol),
         max_repetition_(max_repetition),
         max_sequence_(max_sequence),
+        min_entropy_(min_entropy),
         max_attempts_(max_attempts),
         roles_(std::move(roles)) {}
   PolicyConfig()
