@@ -163,7 +163,7 @@ std::variant<PolicyConfig, ContainerError> PolicyConfig::ParseFromFile(
   LoggingLevel logging_level = parse_logging_level(
     tbl["logging"]["level"].value<std::string_view>());
   std::variant<std::vector<Role>, ContainerError> roles_result = parse_rules(
-    tbl["logging"]["level"].value<std::string_view>());
+    tbl["roles"]["roles"].value<std::string_view>());
   if (std::holds_alternative<ContainerError>(roles_result)) {
     return std::get<ContainerError>(roles_result);
   }
