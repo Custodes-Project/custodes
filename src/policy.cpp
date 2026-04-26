@@ -162,7 +162,7 @@ std::optional<PolicyConfig> PolicyConfig::ParseFromFile(
     uint32_t>();
   LoggingLevel logging_level = parse_logging_level(
     tbl["logging"]["level"].value<std::string_view>());
-  std::variant<std::vector<Role>, ContainerError> roles_result = parse_roles(
+  std::variant<std::vector<Role>, ContainerError> roles_result = parse_rules(
     tbl["logging"]["level"].value<std::string_view>());
   if (std::holds_alternative<ContainerError>(roles_result)) {
     return std::nullopt;
@@ -174,7 +174,7 @@ std::optional<PolicyConfig> PolicyConfig::ParseFromFile(
   return PolicyConfig(validation_regex, regex_string, min_length, max_length,
                       require_capital, require_number, require_symbol,
                       max_repetition, max_sequence, min_entropy, max_attempts,
-                      roles);
+                      logging_level, roles);
 }
 
 [[nodiscard]] const bool PolicyHandler::IsValidPassword(
