@@ -58,8 +58,6 @@ LoggingLevel parse_logging_level(
   return DEFAULT_LEVEL;
 }
 
-std::variant<std::vector<Role>, ContainerError> parse_roles(
-  std::optional<std::string_view> rules) {
 void apply_rule(std::vector<Role> roles, bool insertion, std::string_view role,
                 std::string_view users_or_docs) {
   bool exists = false;
@@ -81,8 +79,38 @@ void apply_rule(std::vector<Role> roles, bool insertion, std::string_view role,
   }
 }
 
+const std::regex rule_regex(R"#((\+|-)\s+(\w+)\s+((?:\w+\s)+)\s*)#");
+
+std::variant<std::vector<Role>, ContainerError> parse_rules(
+  const std::optional<std::string_view>& rules) {
   if (!rules) {
     return ContainerError("No rules provided.");
+  }
+
+  std::vector<std::tuple<std::string_view, std::string_view>> deletions;
+  std::vector<Role> roles;
+  std::stringstream ss((rules->data()));
+  std::string line;
+  while (std::getline(ss, line)) {
+    std::smatch match;
+    if (!std::regex_search(line, match, rule_regex)) {
+      return ContainerError("Invalid rule provided.");
+    }
+    if (match[0].str() == "+") {
+      apply_rule(roles, true, match[1].str(), match[2].str());
+    } else {
+      deletions.push_back(
+        std::tuple<std::string_view, std::string_view>(
+          match[1].str(), match[2].str()));
+    }
+  }
+  for (auto d : deletions) {
+    apply_rule(roles, false, std::get<0>(d), std::get<1>(d));
+  }
+  return roles;
+}
+}
+
 Role::Role(std::string_view role, std::string_view users_or_docs) {
   role_ = std::move(role);
   std::stringstream ss(users_or_docs.data());
