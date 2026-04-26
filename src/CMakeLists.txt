@@ -21,7 +21,6 @@
 # However, if the content of the subdirectory is sufficiently large
 # Consider making it its own target to avoid unnecessary recompilation
 set(CSDC_SOURCE_FILES
-        main.cpp
         store.cpp
         session.cpp
         policy.cpp
@@ -49,6 +48,7 @@ else ()
 endif ()
 
 target_link_libraries(Custodes_SDC PRIVATE sodium)
+target_link_libraries(Custodes_SDC PRIVATE tomlplusplus::tomlplusplus)
 
 # Header files go in include directory and are automatically discovered
 target_include_directories(Custodes_SDC PUBLIC include)

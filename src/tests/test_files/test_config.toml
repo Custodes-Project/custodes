@@ -1,0 +1,12 @@
+[passwords]
+min_length = 8
+require_capital = true
+[logging]
+level="INFO"
+[roles]
+roles="""
++ guest jim mike chris
++ admin mike jim
++ admin doc1 doc2
++ guest doc1
+"""

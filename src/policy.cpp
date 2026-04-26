@@ -26,7 +26,157 @@
 #include <regex>
 #include <string>
 
+#define TOML_EXCEPTIONS 0
+#include "toml++/toml.hpp"
+
 namespace custodes {
+
+namespace {
+LoggingLevel parse_logging_level(
+  const std::optional<std::string_view>& option_string) {
+  constexpr LoggingLevel DEFAULT_LEVEL = INFO;
+
+  if (option_string) {
+    std::string s(*option_string);
+    std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
+      return std::tolower(c);
+    });
+    if (s.compare("debug")) {
+      return LoggingLevel::DEBUG;
+    }
+    if (s.compare("info")) {
+      return LoggingLevel::INFO;
+    }
+    if (s.compare("warn")) {
+      return LoggingLevel::WARN;
+    }
+    if (s.compare("error")) {
+      return LoggingLevel::ERROR;
+    }
+    return DEFAULT_LEVEL;
+  }
+  return DEFAULT_LEVEL;
+}
+
+void apply_rule(std::vector<Role> roles, bool insertion, std::string_view role,
+                std::string_view users_or_docs) {
+  bool exists = false;
+  for (auto r : roles) {
+    if (r.get_role() == role) {
+      exists = true;
+      if (insertion) {
+        r.add_users_or_docs(users_or_docs);
+      } else {
+        r.remove_users_or_docs(users_or_docs);
+      }
+      break;
+    }
+  }
+  if (!exists) {
+    if (insertion) {
+      roles.push_back(Role(role, users_or_docs));
+    }
+  }
+}
+
+const std::regex rule_regex(R"#((\+|-)\s+(\w+)\s+((?:\w+\s*)+))#");
+
+std::variant<std::vector<Role>, ContainerError> parse_rules(
+  const std::optional<std::string_view>& rules) {
+  if (!rules) {
+    return ContainerError("No rules provided.");
+  }
+
+  std::vector<std::tuple<std::string_view, std::string_view>> deletions;
+  std::vector<Role> roles;
+  std::stringstream ss((rules->data()));
+  std::string line;
+  while (std::getline(ss, line)) {
+    std::smatch match;
+    if (!std::regex_search(line, match, rule_regex)) {
+      return ContainerError("Invalid rule provided: " + line);
+    }
+    if (match[0].str() == "+") {
+      apply_rule(roles, true, match[1].str(), match[2].str());
+    } else {
+      deletions.push_back(
+        std::tuple<std::string_view, std::string_view>(
+          match[1].str(), match[2].str()));
+    }
+  }
+  for (auto d : deletions) {
+    apply_rule(roles, false, std::get<0>(d), std::get<1>(d));
+  }
+  return roles;
+}
+}
+
+Role::Role(std::string_view role, std::string_view users_or_docs) {
+  role_ = std::move(role);
+  std::stringstream ss(users_or_docs.data());
+  std::string item;
+  while (std::getline(ss, item, ' ')) {
+    users_and_docs_.push_back(item);
+  }
+}
+
+void Role::add_users_or_docs(std::string_view users_or_docs) {
+  std::stringstream ss(users_or_docs.data());
+  std::string item;
+  while (std::getline(ss, item, ' ')) {
+    users_and_docs_.push_back(item);
+  }
+}
+
+void Role::remove_users_or_docs(std::string_view users_or_docs) {
+  std::stringstream ss(users_or_docs.data());
+  std::string item;
+  while (std::getline(ss, item, ' ')) {
+    users_and_docs_.erase(std::find(users_and_docs_.begin(),
+                                    users_and_docs_.end(), item));
+  }
+}
+
+std::variant<PolicyConfig, ContainerError> PolicyConfig::ParseFromFile(
+  std::string_view file_path) {
+  toml::parse_result result = toml::parse_file(file_path);
+  if (!result) {
+    return ContainerError("Unable to parse config file.");
+  }
+  toml::table tbl = std::move(result).table();
+  toml::node_view<toml::node> passwords = tbl["passwords"];
+  std::string regex_string = passwords["regex_string"].value_or("");
+  std::optional<uint32_t> min_length = passwords["min_length"].value<
+    uint32_t>();
+  std::optional<uint32_t> max_length = passwords["max_length"].value<
+    uint32_t>();
+  bool require_capital = passwords["require_capital"].value_or(false);
+  bool require_number = passwords["require_number"].value_or(false);
+  bool require_symbol = passwords["require_symbol"].value_or(false);
+  std::optional<uint32_t> max_repetition = passwords["max_repetition"].value<
+    uint32_t>();
+  std::optional<uint32_t> max_sequence = passwords["max_sequence"].value<
+    uint32_t>();
+  uint32_t min_entropy = passwords["min_entropy"].value_or(0);
+  std::optional<uint32_t> max_attempts = passwords["max_attempts"].value<
+    uint32_t>();
+  LoggingLevel logging_level = parse_logging_level(
+    tbl["logging"]["level"].value<std::string_view>());
+  std::variant<std::vector<Role>, ContainerError> roles_result = parse_rules(
+    tbl["roles"]["roles"].value<std::string_view>());
+  if (std::holds_alternative<ContainerError>(roles_result)) {
+    return std::get<ContainerError>(roles_result);
+  }
+  std::vector<Role> roles = std::get<std::vector<Role>>(roles_result);
+
+  std::regex validation_regex(regex_string);
+
+  return PolicyConfig(validation_regex, regex_string, min_length, max_length,
+                      require_capital, require_number, require_symbol,
+                      max_repetition, max_sequence, min_entropy, max_attempts,
+                      logging_level, roles);
+}
+
 [[nodiscard]] const bool PolicyHandler::IsValidPassword(
     std::string_view password) {
   if (!this->CheckValidationRegex(password)) {
@@ -57,6 +207,15 @@ namespace custodes {
     return false;
   }
   return true;
+}
+
+std::variant<PolicyHandler, ContainerError> PolicyHandler::
+CreateFromFile(std::string_view file_path) {
+  auto result = PolicyConfig::ParseFromFile(file_path);
+  if (std::holds_alternative<ContainerError>(result)) {
+    return std::get<ContainerError>(result);
+  }
+  return PolicyHandler(std::get<PolicyConfig>(result));
 }
 
 [[nodiscard]] const bool PolicyHandler::CheckValidationRegex(

@@ -39,11 +39,27 @@ enum LoggingLevel {
 
 class Role {
  public:
-  explicit Role(std::string_view role_or_doc, ...);
+  /**
+   *
+   * @param role Role ident.
+   * @param users_or_docs Space separated string of users or document idents.
+   */
+  explicit Role(std::string_view role, std::string_view users_or_docs);
+
+  [[nodiscard]] inline std::string_view get_role() {
+    return role_;
+  }
+
+  /**
+   *
+   * @param users_or_docs Space separated string of users or document idents.
+   */
+  void add_users_or_docs(std::string_view users_or_docs);
+  void remove_users_or_docs(std::string_view users_or_docs);
 
  private:
-  std::string role_or_doc_;
-  std::vector<std::string> users_;
+  std::string role_;
+  std::vector<std::string> users_and_docs_;
 };
 
 class PolicyConfig {
@@ -51,16 +67,27 @@ class PolicyConfig {
   PolicyConfig(std::regex validation_regex, std::string regex_string,
                std::optional<uint32_t> min_length,
                std::optional<uint32_t> max_length,
+               bool require_capital,
+               bool require_number,
+               bool require_symbol,
                std::optional<uint32_t> max_repetition,
                std::optional<uint32_t> max_sequence,
-               std::optional<uint32_t> max_attempts, std::vector<Role> roles)
+               uint32_t min_entropy,
+               std::optional<uint32_t> max_attempts,
+               LoggingLevel logging_level,
+               std::vector<Role> roles)
       : validation_regex_(std::move(validation_regex)),
         regex_string_(std::move(regex_string)),
         min_length_(min_length),
         max_length_(max_length),
+        require_capital_(require_capital),
+        require_number_(require_number),
+        require_symbol_(require_symbol),
         max_repetition_(max_repetition),
         max_sequence_(max_sequence),
+        min_entropy_(min_entropy),
         max_attempts_(max_attempts),
+        logging_level_(logging_level),
         roles_(std::move(roles)) {}
   PolicyConfig()
       : validation_regex_(),
@@ -71,7 +98,7 @@ class PolicyConfig {
         max_sequence_(std::nullopt),
         max_attempts_(std::nullopt),
         roles_({}) {}
-  static std::optional<PolicyConfig> ParseFromFile(std::string_view file_path);
+  static std::variant<PolicyConfig, ContainerError> ParseFromFile(std::string_view file_path);
   [[nodiscard]] inline const std::regex get_validation_regex() {
     return validation_regex_;
   }
@@ -191,7 +218,7 @@ class PolicyHandler {
   [[nodiscard]] const bool IsValidPassword(std::string_view password);
   [[nodiscard]] const bool CanUserAccessStore(std::string_view username,
                                               std::string_view password);
-  static std::variant<PolicyHandler, ContainerError> CreateFromFile(File file);
+  static std::variant<PolicyHandler, ContainerError> CreateFromFile(std::string_view file_path);
   PolicyConfig policy_config_;
 
  private:
