@@ -199,7 +199,7 @@ class PolicyHandler {
   [[nodiscard]] const bool IsValidPassword(std::string_view password);
   [[nodiscard]] const bool CanUserAccessStore(std::string_view username,
                                               std::string_view password);
-  static std::variant<PolicyHandler, ContainerError> CreateFromFile(File file);
+  static std::variant<PolicyHandler, ContainerError> CreateFromFile(std::string_view file_path);
   PolicyConfig policy_config_;
 
  private:
