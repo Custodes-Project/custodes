@@ -65,6 +65,47 @@ std::variant<std::vector<Role>, ContainerError> parse_roles(
   }
 }
 }
+
+std::optional<PolicyConfig> PolicyConfig::ParseFromFile(
+  std::string_view file_path) {
+  toml::parse_result result = toml::parse_file(file_path);
+  if (!result) {
+    return std::nullopt;
+  }
+  toml::table tbl = std::move(result).table();
+  toml::node_view<toml::node> passwords = tbl["passwords"];
+  std::string regex_string = passwords["regex_string"].value_or("");
+  std::optional<uint32_t> min_length = passwords["min_length"].value<
+    uint32_t>();
+  std::optional<uint32_t> max_length = passwords["max_length"].value<
+    uint32_t>();
+  bool require_capital = passwords["require_capital"].value_or(false);
+  bool require_number = passwords["require_number"].value_or(false);
+  bool require_symbol = passwords["require_symbol"].value_or(false);
+  std::optional<uint32_t> max_repetition = passwords["max_repetition"].value<
+    uint32_t>();
+  std::optional<uint32_t> max_sequence = passwords["max_sequence"].value<
+    uint32_t>();
+  uint32_t min_entropy = passwords["min_entropy"].value_or(0);
+  std::optional<uint32_t> max_attempts = passwords["max_attempts"].value<
+    uint32_t>();
+  LoggingLevel logging_level = parse_logging_level(
+    tbl["logging"]["level"].value<std::string_view>());
+  std::variant<std::vector<Role>, ContainerError> roles_result = parse_roles(
+    tbl["logging"]["level"].value<std::string_view>());
+  if (std::holds_alternative<ContainerError>(roles_result)) {
+    return std::nullopt;
+  }
+  std::vector<Role> roles = std::get<std::vector<Role>>(roles_result);
+
+  std::regex validation_regex(regex_string);
+
+  return PolicyConfig(validation_regex, regex_string, min_length, max_length,
+                      require_capital, require_number, require_symbol,
+                      max_repetition, max_sequence, min_entropy, max_attempts,
+                      roles);
+}
+
 [[nodiscard]] const bool PolicyHandler::IsValidPassword(
     std::string_view password) {
   if (!this->CheckValidationRegex(password)) {
