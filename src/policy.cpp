@@ -57,6 +57,12 @@ LoggingLevel parse_logging_level(
   }
   return DEFAULT_LEVEL;
 }
+
+std::variant<std::vector<Role>, ContainerError> parse_roles(
+  std::optional<std::string_view> rules) {
+  if (!rules) {
+    return ContainerError("No rules provided.");
+  }
 }
 }
 [[nodiscard]] const bool PolicyHandler::IsValidPassword(
