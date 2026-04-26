@@ -39,11 +39,11 @@ enum LoggingLevel {
 
 class Role {
  public:
-  explicit Role(std::string_view role_or_doc, ...);
+  explicit Role(std::string_view role, ...);
 
  private:
-  std::string role_or_doc_;
-  std::vector<std::string> users_;
+  std::string role_;
+  std::vector<std::string> users_and_docs_;
 };
 
 class PolicyConfig {
