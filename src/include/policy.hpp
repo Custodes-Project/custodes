@@ -98,7 +98,7 @@ class PolicyConfig {
         max_sequence_(std::nullopt),
         max_attempts_(std::nullopt),
         roles_({}) {}
-  static std::optional<PolicyConfig> ParseFromFile(std::string_view file_path);
+  static std::variant<PolicyConfig, ContainerError> ParseFromFile(std::string_view file_path);
   [[nodiscard]] inline const std::regex get_validation_regex() {
     return validation_regex_;
   }
