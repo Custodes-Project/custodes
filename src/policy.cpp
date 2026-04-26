@@ -138,6 +138,14 @@ std::optional<PolicyConfig> PolicyConfig::ParseFromFile(
   return true;
 }
 
+std::variant<PolicyHandler, ContainerError> PolicyHandler::
+CreateFromFile(std::string_view file_path) {
+  if (auto pc = PolicyConfig::ParseFromFile(file_path)) {
+    return PolicyHandler(*pc);
+  }
+  return ContainerError("Failed to parse config.");
+}
+
 [[nodiscard]] const bool PolicyHandler::CheckValidationRegex(
     std::string_view password) {
   if (policy_config_.get_regex_string().empty()) {
