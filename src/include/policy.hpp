@@ -39,7 +39,23 @@ enum LoggingLevel {
 
 class Role {
  public:
-  explicit Role(std::string_view role, ...);
+  /**
+   *
+   * @param role Role ident.
+   * @param users_or_docs Space separated string of users or document idents.
+   */
+  explicit Role(std::string_view role, std::string_view users_or_docs);
+
+  [[nodiscard]] inline std::string_view get_role() {
+    return role_;
+  }
+
+  /**
+   *
+   * @param users_or_docs Space separated string of users or document idents.
+   */
+  void add_users_or_docs(std::string_view users_or_docs);
+  void remove_users_or_docs(std::string_view users_or_docs);
 
  private:
   std::string role_;
