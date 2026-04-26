@@ -21,7 +21,6 @@
 # However, if the content of the subdirectory is sufficiently large
 # Consider making it its own target to avoid unnecessary recompilation
 set(CSDC_SOURCE_FILES
-        main.cpp
         store.cpp
         session.cpp
         policy.cpp
