@@ -57,7 +57,9 @@ class PolicyConfig {
                std::optional<uint32_t> max_repetition,
                std::optional<uint32_t> max_sequence,
                uint32_t min_entropy,
-               std::optional<uint32_t> max_attempts, std::vector<Role> roles)
+               std::optional<uint32_t> max_attempts,
+               LoggingLevel logging_level,
+               std::vector<Role> roles)
       : validation_regex_(std::move(validation_regex)),
         regex_string_(std::move(regex_string)),
         min_length_(min_length),
@@ -69,6 +71,7 @@ class PolicyConfig {
         max_sequence_(max_sequence),
         min_entropy_(min_entropy),
         max_attempts_(max_attempts),
+        logging_level_(logging_level),
         roles_(std::move(roles)) {}
   PolicyConfig()
       : validation_regex_(),
