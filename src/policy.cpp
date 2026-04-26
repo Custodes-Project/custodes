@@ -26,6 +26,9 @@
 #include <regex>
 #include <string>
 
+#define TOML_EXCEPTIONS 0
+#include "toml++/toml.hpp"
+
 namespace custodes {
 [[nodiscard]] const bool PolicyHandler::IsValidPassword(
     std::string_view password) {
