@@ -79,7 +79,7 @@ void apply_rule(std::vector<Role> roles, bool insertion, std::string_view role,
   }
 }
 
-const std::regex rule_regex(R"#((\+|-)\s+(\w+)\s+((?:\w+\s)+)\s*)#");
+const std::regex rule_regex(R"#((\+|-)\s+(\w+)\s+((?:\w+\s*)+))#");
 
 std::variant<std::vector<Role>, ContainerError> parse_rules(
   const std::optional<std::string_view>& rules) {
