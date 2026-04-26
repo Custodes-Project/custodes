@@ -60,6 +60,27 @@ LoggingLevel parse_logging_level(
 
 std::variant<std::vector<Role>, ContainerError> parse_roles(
   std::optional<std::string_view> rules) {
+void apply_rule(std::vector<Role> roles, bool insertion, std::string_view role,
+                std::string_view users_or_docs) {
+  bool exists = false;
+  for (auto r : roles) {
+    if (r.get_role() == role) {
+      exists = true;
+      if (insertion) {
+        r.add_users_or_docs(users_or_docs);
+      } else {
+        r.remove_users_or_docs(users_or_docs);
+      }
+      break;
+    }
+  }
+  if (!exists) {
+    if (insertion) {
+      roles.push_back(Role(role, users_or_docs));
+    }
+  }
+}
+
   if (!rules) {
     return ContainerError("No rules provided.");
   }
