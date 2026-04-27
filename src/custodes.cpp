@@ -104,7 +104,7 @@ std::optional<custodes::ContainerError> CreateContainer(
     uint32_t access_field = user_acm[u];
     std::vector<std::tuple<std::string, custodes::SymmetricKey>> doc_keys;
     for (int i = 0; i < input_files.size(); i++) {
-      if (doc_acm[input_files[i]] & access_field != 0) {
+      if ((doc_acm[input_files[i]] & access_field) != 0) {
         doc_keys.push_back({input_files[i], sym_keys[i]});
       }
     }

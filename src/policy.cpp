@@ -41,16 +41,16 @@ LoggingLevel parse_logging_level(
     std::transform(s.begin(), s.end(), s.begin(), [](unsigned char c) {
       return std::tolower(c);
     });
-    if (s.compare("debug")) {
+    if (s == "debug") {
       return LoggingLevel::DEBUG;
     }
-    if (s.compare("info")) {
+    if (s == "info") {
       return LoggingLevel::INFO;
     }
-    if (s.compare("warn")) {
+    if (s == "warn") {
       return LoggingLevel::WARN;
     }
-    if (s.compare("error")) {
+    if (s == "error") {
       return LoggingLevel::ERROR;
     }
     return DEFAULT_LEVEL;
@@ -58,10 +58,10 @@ LoggingLevel parse_logging_level(
   return DEFAULT_LEVEL;
 }
 
-void apply_rule(std::vector<Role> roles, bool insertion, std::string_view role,
+void apply_rule(std::vector<Role>& roles, bool insertion, std::string_view role,
                 std::string_view users_or_docs) {
   bool exists = false;
-  for (auto r : roles) {
+  for (auto& r : roles) {
     if (r.get_role() == role) {
       exists = true;
       if (insertion) {
@@ -92,16 +92,19 @@ std::variant<std::vector<Role>, ContainerError> parse_rules(
   std::stringstream ss((rules->data()));
   std::string line;
   while (std::getline(ss, line)) {
+    if (line.empty()) {
+      continue;
+    }
     std::smatch match;
     if (!std::regex_search(line, match, rule_regex)) {
       return ContainerError("Invalid rule provided: " + line);
     }
-    if (match[0].str() == "+") {
-      apply_rule(roles, true, match[1].str(), match[2].str());
+    if (match[1].str() == "+") {
+      apply_rule(roles, true, match[2].str(), match[3].str());
     } else {
       deletions.push_back(
         std::tuple<std::string_view, std::string_view>(
-          match[1].str(), match[2].str()));
+          match[2].str(), match[3].str()));
     }
   }
   for (auto d : deletions) {
