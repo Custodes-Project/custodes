@@ -20,8 +20,7 @@
 #include <sodium.h>
 #include <sodium/crypto_box.h>
 #include <sodium/crypto_pwhash.h>
-
-#include <memory>
+#include <sodium/crypto_secretbox.h>
 
 #include "./include/store.hpp"
 
@@ -30,5 +29,21 @@ Salt CreateSalt() {
   Salt salt(new unsigned char[crypto_pwhash_SALTBYTES]);
   randombytes_buf(salt.get(), crypto_pwhash_SALTBYTES);
   return salt;
+}
+
+SymmetricKey DeriveKey(std::string_view username, std::string_view password,
+                       Salt salt) {
+  SymmetricKey key(new unsigned char[crypto_secretbox_KEYBYTES]);
+
+  std::string concat = std::string(username) + '\0' + std::string(password);
+
+  if (crypto_pwhash(
+          key.get(), crypto_secretbox_KEYBYTES, password.data(),
+          password.size(), salt.get(), crypto_pwhash_OPSLIMIT_MODERATE,
+          crypto_pwhash_MEMLIMIT_MODERATE, crypto_pwhash_ALG_DEFAULT) != 0) {
+    throw std::runtime_error("Key derivation failed");
+  }
+
+  return key;
 }
 }  // namespace custodes
