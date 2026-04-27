@@ -24,6 +24,7 @@ set(CSDC_SOURCE_FILES
         store.cpp
         session.cpp
         policy.cpp
+        crypto.cpp
 )
 
 # EmScripten config

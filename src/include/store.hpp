@@ -84,7 +84,7 @@ class PrivateKey {
   }
 };
 
-typedef std::shared_ptr<unsigned char> SymmetricKey;
+typedef std::shared_ptr<unsigned char[]> SymmetricKey;
 
 class File {
  private:
@@ -112,19 +112,21 @@ typedef std::tuple<File, std::string> FileRolePair;
 
 class SymmetricStore {
  public:
-  SymmetricStore(std::shared_ptr<unsigned char[]> data, size_t data_size): data_(std::move(data)), data_size_(data_size) {}
+  SymmetricStore(std::shared_ptr<unsigned char[]> data, size_t data_size)
+      : data_(std::move(data)), data_size_(data_size) {}
   std::optional<File> Decrypt(SymmetricKey symmetric_key);
-  static std::variant<SymmetricStore, FileError> CreateFromFile(File file, SymmetricKey sym_key);
+  static std::variant<SymmetricStore, FileError> CreateFromFile(
+      File file, SymmetricKey sym_key);
 
 #ifdef CSDC_UNIT_TESTING
   unsigned char* get_data_ptr() { return data_.get(); }
 #endif
 
-private:
+ private:
   std::shared_ptr<unsigned char[]> data_;
   size_t data_size_;
 
-  SymmetricStore(): data_size_(0) {}
+  SymmetricStore() : data_size_(0) {}
 };
 
 class AsymmetricStore {
