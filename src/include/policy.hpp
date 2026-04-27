@@ -50,6 +50,10 @@ class Role {
     return role_;
   }
 
+  [[nodiscard]] inline std::vector<std::string> get_users_and_docs() {
+    return users_and_docs_;
+  }
+
   /**
    *
    * @param users_or_docs Space separated string of users or document idents.

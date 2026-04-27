@@ -117,6 +117,11 @@ class SymmetricStore {
   std::optional<File> Decrypt(SymmetricKey symmetric_key);
   static std::variant<SymmetricStore, FileError> CreateFromFile(
       File file, SymmetricKey sym_key);
+  [[nodiscard]] inline size_t get_size() {
+    return data_size_;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const SymmetricStore& store);
 
 #ifdef CSDC_UNIT_TESTING
   unsigned char* get_data_ptr() { return data_.get(); }
@@ -142,6 +147,7 @@ class AsymmetricStore {
   static AsymmetricStore EncryptFromFile(File file,
                                          PublicKey recipient_public_key,
                                          PrivateKey sender_private_key);
+  friend std::ostream& operator<<(std::ostream& os, const AsymmetricStore& store);
 };
 
 class SymmetricStoreCollection {

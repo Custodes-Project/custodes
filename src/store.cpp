@@ -124,6 +124,13 @@ CreateFromFile(File file, SymmetricKey sym_key) {
   return SymmetricStore(store, store_length);
 }
 
+std::ostream& operator<<(std::ostream& os, const SymmetricStore& store) {
+  if (store.data_ && store.data_size_ > 0) {
+    os.write(reinterpret_cast<const char*>(store.data_.get()), store.data_size_);
+  }
+  return os;
+}
+
 bool File::CanContainSignature() {
   /*
    * Determines if the file can contain signature.
@@ -182,5 +189,13 @@ AsymmetricStore AsymmetricStore::EncryptFromFile(
 
   return AsymmetricStore(std::move(store), store_length);
 }
+
+std::ostream& operator<<(std::ostream& os, const AsymmetricStore& store) {
+  if (store.data_ && store.data_size_ > 0) {
+    os.write(reinterpret_cast<const char*>(store.data_.get()), store.data_size_);
+  }
+  return os;
+}
+
 
 }  // namespace custodes
