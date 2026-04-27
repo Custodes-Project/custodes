@@ -42,7 +42,67 @@ custodes::File assemble_header(
 uint32_t write_u32(uint32_t x) {
   return (x >> 24) | ((x >> 8) & 0xFF00) | ((x & 0xFF00) << 8) | (x << 24);
 }
+
+uint32_t read_u32(std::ifstream& input) {
+  uint32_t raw;
+  input.read(reinterpret_cast<char*>(&raw), sizeof(raw));
+  return write_u32(raw);
 }
+
+std::shared_ptr<unsigned char[]> read_blob(std::ifstream& input, size_t size) {
+  auto buffer = std::shared_ptr<unsigned char[]>(new unsigned char[size]);
+  input.read(reinterpret_cast<char*>(buffer.get()), size);
+  return buffer;
+}
+
+std::optional<custodes::File> locate_user_header(
+  std::ifstream& input, size_t header_size, const PrivateKey& user_private_key,
+  const PublicKey& user_public_key) {
+  size_t header_offset = 0;
+  while (header_size > header_offset) {
+    size_t record_size = read_u32(input);
+    header_offset += record_size;
+    auto record = read_blob(input, record_size);
+    AsymmetricStore asym_store(record, record_size);
+    auto decrypt_result = asym_store.Decrypt(user_private_key, user_public_key);
+    if (decrypt_result.has_value()) {
+      return decrypt_result.value();
+    }
+  }
+  return std::nullopt;
+}
+
+std::string read_cstring(const unsigned char* buf, size_t buf_size,
+                         size_t& offset) {
+  std::string result;
+  while (offset < buf_size && buf[offset] != '\0') {
+    result += static_cast<char>(buf[offset++]);
+  }
+  offset++;
+  return result;
+}
+
+std::tuple<std::string, std::vector<std::tuple<
+             std::string, custodes::SymmetricKey>>> parse_header(
+  custodes::File& file) {
+  const unsigned char* buf = file.get_data();
+  size_t buf_size = file.get_data_size();
+  size_t offset = 0;
+
+  std::string user = read_cstring(buf, buf_size, offset);
+  std::vector<std::tuple<std::string, custodes::SymmetricKey>> pairs;
+  while (offset < buf_size) {
+    std::string doc_name = read_cstring(buf, buf_size, offset);
+    auto key = std::shared_ptr<unsigned char[]>(new unsigned char[32]);
+    std::memcpy(key.get(), buf + offset, 32);
+    offset += 32;
+    pairs.emplace_back(doc_name, key);
+  }
+
+  return {user, pairs};
+}
+
+} // namespace
 
 std::optional<custodes::ContainerError> CreateContainer(
   const std::string& config_file, std::vector<std::string> input_files,
@@ -153,8 +213,33 @@ std::optional<custodes::ContainerError> CreateContainer(
 
 std::optional<custodes::ContainerError> ViewContainer(
   const std::string& container_file, const std::string& user,
-  custodes::PrivateKey user_private_key,
+  const custodes::PublicKey& user_public_key,
+  const custodes::PrivateKey& user_private_key,
   std::vector<std::tuple<std::string, custodes::File>>& decrypted_files) {
+  std::ifstream input(container_file, std::ios::binary);
+  size_t header_size = read_u32(input);
+  auto header_result = locate_user_header(input, header_size, user_private_key,
+                                          user_public_key);
+  if (!header_result.has_value()) {
+    return ContainerError("User not in container.");
+  }
+  std::tuple<std::string, std::vector<std::tuple<
+               std::string, custodes::SymmetricKey>>> header_data =
+      parse_header(header_result.value());
 
+  while (input.good()) {
+    uint32_t blob_size = read_u32(input);
+    auto buffer = read_blob(input, blob_size);
+    custodes::SymmetricStore store(buffer, blob_size);
+    for (auto pair: std::get<1>(header_data)) {
+      auto key = std::get<1>(pair);
+      auto sym_result = store.Decrypt(key);
+      if (sym_result.has_value()) {
+        decrypted_files.emplace_back(std::get<0>(pair), sym_result.value());
+        break;
+      }
+    }
+  }
+  return std::nullopt;
 }
 } // namespace custodes
