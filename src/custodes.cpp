@@ -1,6 +1,7 @@
 #include "custodes.h"
 
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <iostream>
 
@@ -57,15 +58,17 @@ std::shared_ptr<unsigned char[]> read_blob(std::ifstream& input, size_t size) {
 
 std::optional<custodes::File> locate_user_header(
   std::ifstream& input, size_t header_size, const PrivateKey& user_private_key,
-  const PublicKey& user_public_key) {
+  const PublicKey& creator_public_key) {
   size_t header_offset = 0;
   while (header_size > header_offset) {
     size_t record_size = read_u32(input);
-    header_offset += record_size;
+    header_offset += record_size + 4;
     auto record = read_blob(input, record_size);
     AsymmetricStore asym_store(record, record_size);
-    auto decrypt_result = asym_store.Decrypt(user_private_key, user_public_key);
+    auto decrypt_result = asym_store.Decrypt(user_private_key, creator_public_key);
     if (decrypt_result.has_value()) {
+      size_t remaining = header_size - header_offset;
+      input.seekg(remaining, std::ios::cur);
       return decrypt_result.value();
     }
   }
@@ -102,13 +105,24 @@ std::tuple<std::string, std::vector<std::tuple<
   return {user, pairs};
 }
 
+std::vector<std::string> strip_paths(const std::vector<std::string>& paths) {
+  std::vector<std::string> filenames;
+  filenames.reserve(paths.size());
+  for (auto& p: paths) {
+    filenames.push_back(std::filesystem::path(p).stem().string());
+  }
+  return filenames;
+}
+
 } // namespace
 
 std::optional<custodes::ContainerError> CreateContainer(
   const std::string& config_file, std::vector<std::string> input_files,
   std::vector<std::string> users,
   std::vector<std::string> user_public_keys,
-  custodes::PrivateKey creator_private_key) {
+  std::string creator_private_key) {
+  std::vector<std::string> filenames = strip_paths(input_files);
+
   // parse config
   auto result = custodes::PolicyHandler::CreateFromFile(config_file);
   if (std::holds_alternative<custodes::ContainerError>(result)) {
@@ -132,7 +146,7 @@ std::optional<custodes::ContainerError> CreateContainer(
   for (auto u : users) {
     user_acm[u] = acm[u];
   }
-  for (auto d : input_files) {
+  for (auto d : filenames) {
     doc_acm[d] = acm[d];
   }
 
@@ -145,7 +159,7 @@ std::optional<custodes::ContainerError> CreateContainer(
       return std::get<custodes::FileError>(result_file);
     }
     custodes::File file = std::get<custodes::File>(result_file);
-    custodes::SymmetricKey key = custodes::DeriveKey(f, "");
+    custodes::SymmetricKey key = custodes::DeriveKey(f, "", custodes::CreateSalt());
     auto result_store = custodes::SymmetricStore::CreateFromFile(file, key);
     if (std::holds_alternative<custodes::FileError>(result_store)) {
       return std::get<custodes::FileError>(result_store);
@@ -163,9 +177,9 @@ std::optional<custodes::ContainerError> CreateContainer(
   for (auto u : users) {
     uint32_t access_field = user_acm[u];
     std::vector<std::tuple<std::string, custodes::SymmetricKey>> doc_keys;
-    for (int i = 0; i < input_files.size(); i++) {
-      if ((doc_acm[input_files[i]] & access_field) != 0) {
-        doc_keys.push_back({input_files[i], sym_keys[i]});
+    for (int i = 0; i < filenames.size(); i++) {
+      if ((doc_acm[filenames[i]] & access_field) != 0) {
+        doc_keys.push_back({filenames[i], sym_keys[i]});
       }
     }
     header.push_back({u, doc_keys});
@@ -176,18 +190,16 @@ std::optional<custodes::ContainerError> CreateContainer(
   for (int i = 0; i < users.size(); i++) {
     auto file = assemble_header(header[i]);
     auto user_pk = user_public_keys[i];
-    auto key_data = std::shared_ptr<unsigned char[]>(
-      new unsigned char[user_pk.size()]);
-    std::memcpy(key_data.get(), user_pk.data(), user_pk.size());
-    auto pub_key = custodes::PublicKey(key_data, user_pk.size());
+    auto pub_key = custodes::PublicKey::CreateFromString(user_pk);
+    auto sec_key = custodes::PrivateKey::CreateFromString(creator_private_key);
     encrypted_headers.push_back(
       custodes::AsymmetricStore::EncryptFromFile(
-        file, pub_key, creator_private_key));
+        file, pub_key, sec_key));
   }
 
   // write file
   std::ofstream output;
-  output.open("custodes_container.csdc", std::ios::binary);
+  output.open("custodes_container.csdc", std::ios::binary| std::ios::trunc);
   output.write("\0\0\0\0", 4);
   uint32_t total_header_size = 0;
   for (auto h : encrypted_headers) {
@@ -197,15 +209,14 @@ std::optional<custodes::ContainerError> CreateContainer(
     total_header_size += sizeof(size) + h.data_size_;
   }
 
-  uint32_t total_be = write_u32(total_header_size);
-  output.seekp(0);
-  output.write(reinterpret_cast<const char*>(&total_be), sizeof(total_be));
-  output.seekp(0, std::ios::end);
   for (auto f : sym_stores) {
     uint32_t size = write_u32(f.get_size());
     output.write(reinterpret_cast<const char*>(&size), sizeof(size));
     output << f;
   }
+  output.seekp(0);
+  uint32_t total_be = write_u32(total_header_size);
+  output.write(reinterpret_cast<const char*>(&total_be), sizeof(total_be));
   output.close();
 
   return std::nullopt;
@@ -213,13 +224,13 @@ std::optional<custodes::ContainerError> CreateContainer(
 
 std::optional<custodes::ContainerError> ViewContainer(
   const std::string& container_file, const std::string& user,
-  const custodes::PublicKey& user_public_key,
+  const custodes::PublicKey& creator_public_key,
   const custodes::PrivateKey& user_private_key,
   std::vector<std::tuple<std::string, custodes::File>>& decrypted_files) {
   std::ifstream input(container_file, std::ios::binary);
   size_t header_size = read_u32(input);
   auto header_result = locate_user_header(input, header_size, user_private_key,
-                                          user_public_key);
+                                          creator_public_key);
   if (!header_result.has_value()) {
     return ContainerError("User not in container.");
   }

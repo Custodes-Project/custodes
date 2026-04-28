@@ -10,7 +10,7 @@ std::optional<custodes::ContainerError> CreateContainer(
   const std::string& config_file, std::vector<std::string> input_files,
   std::vector<std::string> users,
   std::vector<std::string> user_public_keys,
-  custodes::PrivateKey creator_private_key);
+  std::string creator_private_key);
 
 std::optional<custodes::ContainerError> ViewContainer(
   const std::string& container_file, const std::string& user,

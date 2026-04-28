@@ -23,5 +23,5 @@
 
 namespace custodes {
 Salt CreateSalt();
-SymmetricKey DeriveKey(std::string_view username, std::string_view password);
+SymmetricKey DeriveKey(std::string_view username, std::string_view password, Salt salt);
 }  // namespace custodes
