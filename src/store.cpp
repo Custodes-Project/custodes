@@ -25,6 +25,7 @@
 #include <sodium/randombytes.h>
 
 #include <cstddef>
+#include <cstring>
 #include <fstream>
 #include <memory>
 #include <optional>
@@ -124,6 +125,27 @@ CreateFromFile(File file, SymmetricKey sym_key) {
   return SymmetricStore(store, store_length);
 }
 
+std::ostream& operator<<(std::ostream& os, const SymmetricStore& store) {
+  if (store.data_ && store.data_size_ > 0) {
+    os.write(reinterpret_cast<const char*>(store.data_.get()), store.data_size_);
+  }
+  return os;
+}
+
+PrivateKey PrivateKey::CreateFromString(const std::string& key) {
+  auto key_data = std::shared_ptr<unsigned char[]>(
+      new unsigned char[key.size()]);
+  std::memcpy(key_data.get(), key.data(), key.size());
+  return custodes::PrivateKey(key_data, key.size());
+}
+
+PublicKey PublicKey::CreateFromString(const std::string& key) {
+  auto key_data = std::shared_ptr<unsigned char[]>(
+      new unsigned char[key.size()]);
+  std::memcpy(key_data.get(), key.data(), key.size());
+  return custodes::PublicKey(key_data, key.size());
+}
+
 bool File::CanContainSignature() {
   /*
    * Determines if the file can contain signature.
@@ -182,5 +204,13 @@ AsymmetricStore AsymmetricStore::EncryptFromFile(
 
   return AsymmetricStore(std::move(store), store_length);
 }
+
+std::ostream& operator<<(std::ostream& os, const AsymmetricStore& store) {
+  if (store.data_ && store.data_size_ > 0) {
+    os.write(reinterpret_cast<const char*>(store.data_.get()), store.data_size_);
+  }
+  return os;
+}
+
 
 }  // namespace custodes

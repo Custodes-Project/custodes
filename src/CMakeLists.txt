@@ -24,6 +24,7 @@ set(CSDC_SOURCE_FILES
         store.cpp
         session.cpp
         policy.cpp
+        custodes.cpp
         crypto.cpp
 )
 
@@ -52,7 +53,10 @@ target_link_libraries(Custodes_SDC PRIVATE sodium)
 target_link_libraries(Custodes_SDC PRIVATE tomlplusplus::tomlplusplus)
 
 # Header files go in include directory and are automatically discovered
-target_include_directories(Custodes_SDC PUBLIC include)
+target_include_directories(Custodes_SDC PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<INSTALL_INTERFACE:include>
+)
 
 # Compile definitions by build configuration
 target_compile_definitions(

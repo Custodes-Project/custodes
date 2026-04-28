@@ -59,6 +59,7 @@ class PublicKey {
  public:
   PublicKey(std::shared_ptr<unsigned char[]> key_data, size_t data_size)
       : key_data_(std::move(key_data)), data_size_(data_size) {}
+  static PublicKey CreateFromString(const std::string& key);
   [[nodiscard]] inline unsigned char* get_key_data() {
     return this->key_data_.get();
   }
@@ -69,9 +70,15 @@ class PublicKey {
 class SymmetricStore;
 class PrivateKey {
  private:
-  std::shared_ptr<unsigned char> key_data_;
+  std::shared_ptr<unsigned char[]> key_data_;
+  size_t data_size_;
 
  public:
+  explicit PrivateKey(std::shared_ptr<unsigned char[]> key_data, size_t data_size) : key_data_(
+    std::move(key_data)), data_size_(data_size) {
+  }
+  static PrivateKey CreateFromString(const std::string& key);
+
   static std::variant<SymmetricStore, ContainerError> CreateFromUserKeyfile(
       SymmetricStore keyfile, std::string_view username,
       std::string_view password);
@@ -81,6 +88,9 @@ class PrivateKey {
   CreateFromGuestCredentials(SymmetricStore keyfile);
   [[nodiscard]] inline unsigned char* get_key_data() {
     return this->key_data_.get();
+  }
+  [[nodiscard]] inline size_t get_data_size() {
+    return data_size_;
   }
 };
 
@@ -117,6 +127,11 @@ class SymmetricStore {
   std::optional<File> Decrypt(SymmetricKey symmetric_key);
   static std::variant<SymmetricStore, FileError> CreateFromFile(
       File file, SymmetricKey sym_key);
+  [[nodiscard]] inline size_t get_size() {
+    return data_size_;
+  }
+
+  friend std::ostream& operator<<(std::ostream& os, const SymmetricStore& store);
 
 #ifdef CSDC_UNIT_TESTING
   unsigned char* get_data_ptr() { return data_.get(); }
@@ -136,12 +151,13 @@ class AsymmetricStore {
   std::shared_ptr<unsigned char[]> data_;
   size_t data_size_;
 
-  std::optional<File> Decrypt(PrivateKey sender_private_key,
+  std::optional<File> Decrypt(PrivateKey recipient_private_key,
                               PublicKey sender_public_key);
   static std::variant<AsymmetricStore, FileError> CreateFromFile(File file);
   static AsymmetricStore EncryptFromFile(File file,
                                          PublicKey recipient_public_key,
                                          PrivateKey sender_private_key);
+  friend std::ostream& operator<<(std::ostream& os, const AsymmetricStore& store);
 };
 
 class SymmetricStoreCollection {

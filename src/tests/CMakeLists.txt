@@ -18,6 +18,7 @@ target_sources(CSDC_test PRIVATE
         tomlplusplus_test.cc
         policy_test.cc
         store_test.cc
+        custodes_test.cc
 )
 
 target_link_libraries(CSDC_test
