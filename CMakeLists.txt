@@ -5,10 +5,6 @@
 # Custodes SDC is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Custodes SDC. If not, see <https://www.gnu.org/licenses/>.
-#
-# Author: Elijah Zimmerman
-# Created: March 26, 2026
-# Modified: April 19, 2026
 
 cmake_minimum_required(VERSION 3.28)
 project(

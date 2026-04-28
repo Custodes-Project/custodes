@@ -5,10 +5,6 @@
 # Custodes SDC is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Custodes SDC. If not, see <https://www.gnu.org/licenses/>.
-#
-# Author: Elijah Zimmerman
-# Created: March 27, 2026
-# Modified: April 19, 2026
 
 # Add tests to CSDC_test target
 target_sources(CSDC_test PRIVATE
