@@ -5,10 +5,6 @@
 # Custodes SDC is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for more details.
 #
 # You should have received a copy of the GNU General Public License along with Custodes SDC. If not, see <https://www.gnu.org/licenses/>.
-#
-# Author: Elijah Zimmerman
-# Created: March 26, 2026
-# Modified: April 19, 2026
 
 
 # Source files in src go here
@@ -30,26 +26,35 @@ set(CSDC_SOURCE_FILES
 
 # EmScripten config
 if (EMSCRIPTEN)
-  message(STATUS "Configuring for EmScripten.")
-  add_executable(Custodes_SDC ${CSDC_SOURCE_FILES})
-  target_compile_definitions(Custodes_SDC PRIVATE IS_WASM)
-  target_link_options(Custodes_SDC PRIVATE
-          "-sALLOW_MEMORY_GROWTH=1"
-          "-sMODULARIZE=1"
-          "-sEXPORT_NAME='createCustodesModule'"
-          "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+    message(STATUS "Configuring for EmScripten.")
+    add_executable(Custodes_SDC ${CSDC_SOURCE_FILES})
+    target_compile_definitions(Custodes_SDC PRIVATE IS_WASM)
+    target_link_options(Custodes_SDC PRIVATE
+        "-sALLOW_MEMORY_GROWTH=1"
+        "-sMODULARIZE=1"
+        "-sEXPORT_NAME='createCustodesModule'"
+        "-sEXPORTED_RUNTIME_METHODS=['ccall','cwrap']"
+        "-sEXPORTED_FUNCTIONS=[\
+            '_csdc_create_container',\
+            '_csdc_view_container',\
+            '_csdc_result_file_count',\
+            '_csdc_result_file_name',\
+            '_csdc_result_file_data',\
+            '_csdc_result_file_size',\
+            '_csdc_free_result'\
+        ]"
   )
-  set_target_properties(Custodes_SDC PROPERTIES SUFFIX ".js")
+  set_target_properties(Custodes_SDC PROPERTIES SUFFIX " .js")
 else ()
   message(STATUS "Configuring for desktop.")
   add_library(Custodes_SDC ${CSDC_SOURCE_FILES})
   target_link_libraries(Custodes_SDC PRIVATE keychain)
+  target_link_libraries(Custodes_SDC PRIVATE sodium)
   if(CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     target_compile_options(Custodes_SDC PRIVATE -march=native)
   endif()
 endif ()
 
-target_link_libraries(Custodes_SDC PRIVATE sodium)
 target_link_libraries(Custodes_SDC PRIVATE tomlplusplus::tomlplusplus)
 
 # Header files go in include directory and are automatically discovered

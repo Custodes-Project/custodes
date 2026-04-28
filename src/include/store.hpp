@@ -12,10 +12,6 @@
 //
 // You should have received a copy of the GNU General Public License along with
 // Custodes SDC. If not, see <https://www.gnu.org/licenses/>.
-//
-// Author: Samuel Jones
-// Created: April 6, 2026
-// Modified: April 17, 2026
 
 #ifndef CUSTODES_INCLUDE_STORE_H_
 #define CUSTODES_INCLUDE_STORE_H_
