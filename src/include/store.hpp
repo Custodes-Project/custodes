@@ -29,8 +29,6 @@
 #include <unordered_map>
 #include <variant>
 
-#include "../../build/_deps/googletest-src/googletest/include/gtest/gtest_prod.h"
-
 namespace custodes {
 enum class FileSignature { kNoSignature, kInvalidSignature, kValidSignature };
 
