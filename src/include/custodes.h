@@ -14,7 +14,7 @@ std::optional<custodes::ContainerError> CreateContainer(
 
 std::optional<custodes::ContainerError> ViewContainer(
   const std::string& container_file, const std::string& user,
-  const custodes::PublicKey& user_public_key,
+  const custodes::PublicKey& creator_public_key,
   const custodes::PrivateKey& user_private_key,
   std::vector<std::tuple<std::string, custodes::File>>& decrypted_files);
 } // namespace custodes
